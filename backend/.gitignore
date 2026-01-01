@@ -1,0 +1,10 @@
+node_modules/
+.env
+logs/*.log
+uploads/*
+!uploads/.gitkeep
+!logs/.gitkeep
+*.swp
+*.swo
+.DS_Store
+package-lock.json
