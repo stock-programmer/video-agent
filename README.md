@@ -107,7 +107,7 @@ This is an **MVP-stage** platform focusing on the core Image-to-Video generation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/video-maker.git
+git clone https://github.com/stock-programmer/video-agent.git
 cd video-maker/my-project
 ```
 
@@ -389,8 +389,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- **Project Link:** https://github.com/yourusername/video-maker
-- **Issues:** https://github.com/yourusername/video-maker/issues
+- **Project Link:** https://github.com/stock-programmer/video-agent
+- **Issues:** https://github.com/stock-programmer/video-agent/issues
 - **Email:** 273007213@qq.com
 
 ---

@@ -107,7 +107,7 @@
 
 1. **克隆仓库**
 ```bash
-git clone https://github.com/yourusername/video-maker.git
+git clone https://github.com/stock-programmer/video-agent.git
 cd video-maker/my-project
 ```
 
@@ -389,8 +389,8 @@ npm start
 
 ## 📧 联系方式
 
-- **项目链接：** https://github.com/yourusername/video-maker
-- **问题反馈：** https://github.com/yourusername/video-maker/issues
+- **项目链接：** https://github.com/stock-programmer/video-agent
+- **问题反馈：** https://github.com/stock-programmer/video-agent/issues
 - **邮箱：** 273007213@qq.com
 
 ---
