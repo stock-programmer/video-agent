@@ -108,7 +108,7 @@
 1. **克隆仓库**
 ```bash
 git clone https://github.com/stock-programmer/video-agent.git
-cd video-maker/my-project
+cd video-agent/my-project
 ```
 
 2. **配置环境变量**

@@ -108,7 +108,7 @@ This is an **MVP-stage** platform focusing on the core Image-to-Video generation
 1. **Clone the repository**
 ```bash
 git clone https://github.com/stock-programmer/video-agent.git
-cd video-maker/my-project
+cd video-agenty-project
 ```
 
 2. **Configure environment variables**
