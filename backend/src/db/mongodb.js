@@ -8,11 +8,39 @@ const workspaceSchema = new mongoose.Schema({
   image_path: String,
   image_url: String,
   form_data: {
+    // ===== v1.0 字段 =====
     camera_movement: String,
     shot_type: String,
     lighting: String,
     motion_prompt: String,
-    checkboxes: mongoose.Schema.Types.Mixed
+    checkboxes: mongoose.Schema.Types.Mixed,
+
+    // ===== v1.1 新增字段 =====
+    duration: {
+      type: Number,
+      default: 5,  // API最小值
+      enum: [5, 10, 15]  // Qwen API支持的值
+    },
+    aspect_ratio: {
+      type: String,
+      default: '16:9',
+      enum: ['16:9', '9:16', '1:1', '4:3']
+    },
+    motion_intensity: {
+      type: Number,
+      default: 3,  // 中等强度
+      min: 1,
+      max: 5
+    },
+    quality_preset: {
+      type: String,
+      default: 'standard',
+      enum: ['draft', 'standard', 'high']
+    },
+
+    // ===== v1.2 新增字段 =====
+    angle: String,       // 视角 - 支持自由输入
+    frame_rate: String   // 帧率 - 支持自由输入
   },
   video: {
     status: {
@@ -35,7 +63,75 @@ const workspaceSchema = new mongoose.Schema({
     is_deleted: { type: Boolean, default: false },      // 是否被软删除
     deleted_at: Date,                                     // 删除时间
     original_order_index: Number                          // 原始位置索引(用于恢复)
-  }
+  },
+
+  // ========== v2.0 新增字段: Prompt Optimization History ==========
+  optimization_history: [{
+    timestamp: {
+      type: Date,
+      default: Date.now,
+      index: true
+    },
+
+    // 意图报告 (Intent Analysis Agent 输出)
+    intent_report: {
+      user_intent: {
+        scene_description: String,
+        desired_mood: String,
+        key_elements: [String],
+        motion_expectation: String,
+        energy_level: String
+      },
+      parameter_analysis: {
+        aligned: [String],
+        potential_issues: [String]
+      },
+      confidence: Number
+    },
+
+    // 视频分析 (Video Analysis Agent 输出)
+    video_analysis: {
+      content_match_score: Number,
+      issues: [{
+        category: String,
+        description: String,
+        severity: {
+          type: String,
+          enum: ['high', 'medium', 'low']
+        },
+        affected_parameter: String
+      }],
+      technical_quality: {
+        resolution: String,
+        clarity_score: Number,
+        fluency_score: Number,
+        artifacts: String
+      },
+      strengths: [String],
+      overall_assessment: String
+    },
+
+    // 优化结果 (Master Agent 输出)
+    optimization_result: {
+      ng_reasons: [String],
+      optimized_params: mongoose.Schema.Types.Mixed, // 只包含被修改的参数
+      changes: [{
+        field: String,
+        old_value: mongoose.Schema.Types.Mixed,
+        new_value: mongoose.Schema.Types.Mixed,
+        reason: String
+      }],
+      confidence: Number
+    },
+
+    // 用户操作记录
+    user_action: {
+      type: String,
+      enum: ['applied', 'rejected', 'modified', 'pending'],
+      default: 'pending'
+    },
+    applied_at: Date
+  }]
 }, {
   timestamps: true
 });
@@ -43,7 +139,11 @@ const workspaceSchema = new mongoose.Schema({
 // 创建索引
 workspaceSchema.index({ order_index: 1 });
 workspaceSchema.index({ 'video.status': 1 });
-workspaceSchema.index({ 'deleted.is_deleted': 1 });  // 新增索引优化查询
+workspaceSchema.index({ 'deleted.is_deleted': 1 });  // 软删除查询优化
+
+// v2.0 新增索引 (优化 Prompt Optimization 查询)
+workspaceSchema.index({ 'optimization_history.timestamp': -1 });  // 按时间查询优化历史
+workspaceSchema.index({ 'optimization_history.user_action': 1, createdAt: -1 });  // 按用户操作和创建时间查询
 
 export const Workspace = mongoose.model('Workspace', workspaceSchema);
 

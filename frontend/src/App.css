@@ -40,3 +40,302 @@
 .read-the-docs {
   color: #888;
 }
+
+/* ===== v1.1 自定义滑块样式 ===== */
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.2);
+}
+
+/* Firefox */
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.2);
+}
+
+/* ===== v2.0 AgentProgress 动画样式 ===== */
+
+/* 动画延迟类 */
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+/* 平滑滚动 */
+.agent-progress {
+  scroll-behavior: smooth;
+}
+
+/* 消息淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.agent-progress > div > div {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 自定义滚动条样式 */
+.agent-progress > div::-webkit-scrollbar {
+  width: 6px;
+}
+
+.agent-progress > div::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.agent-progress > div::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.agent-progress > div::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ===== v2.0 OptimizeButton 动画 ===== */
+
+.optimize-button-container button {
+  transition: all 0.2s ease-in-out;
+}
+
+.optimize-button-container button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.optimize-button-container button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* ===== v2.0 Modal 动画 ===== */
+
+.intent-modal-enter {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.intent-modal-backdrop {
+  animation: backdropFadeIn 0.3s ease-out;
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== v2.0 OptimizationResult 动画 ===== */
+
+.optimization-result {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== v2.0 Loading Spinner 动画 ===== */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 脉冲动画（用于加载状态） */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===== v2.0 进度条动画 ===== */
+
+.progress-bar-fill {
+  transition: width 0.5s ease-out;
+}
+
+/* 进度条闪烁效果（用于活动状态） */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.progress-bar-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 468px 100%;
+}
+
+/* ===== v2.0 通用动画工具类 ===== */
+
+/* 淡入动画 */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 滑入动画（从右侧） */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* 滑入动画（从左侧） */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* 缩放动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* ===== v2.0 响应式布局优化 ===== */
+
+/* 确保在小屏幕上也能正常显示 */
+@media (max-width: 768px) {
+  .intent-modal-enter > div {
+    max-width: 95%;
+    margin: 1rem;
+  }
+
+  .optimization-result {
+    padding: 1rem;
+  }
+
+  .agent-progress {
+    font-size: 0.875rem;
+  }
+}
+
+/* ===== v2.0 主题一致性 ===== */
+
+/* 统一过渡效果 */
+button, a, input, select, textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 统一焦点样式 */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 统一禁用状态 */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

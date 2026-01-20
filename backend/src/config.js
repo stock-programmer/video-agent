@@ -26,6 +26,9 @@ function validateConfig() {
   if (llmProvider === 'gemini' && !process.env.GOOGLE_API_KEY) {
     throw new Error('GOOGLE_API_KEY is required when LLM_PROVIDER is "gemini"');
   }
+  if (llmProvider === 'qwen' && !process.env.DASHSCOPE_API_KEY) {
+    throw new Error('DASHSCOPE_API_KEY is required when LLM_PROVIDER is "qwen"');
+  }
 }
 
 // Validate configuration on module load
@@ -46,6 +49,9 @@ const config = {
   server: {
     port: parseInt(process.env.SERVER_PORT, 10),
     wsPort: parseInt(process.env.WS_PORT, 10),
+    // Base URL for constructing full URLs (for third-party API access)
+    // Defaults to localhost in development, should be set to public URL in production
+    baseUrl: process.env.SERVER_BASE_URL || `http://localhost:${parseInt(process.env.SERVER_PORT, 10) || 3000}`,
   },
 
   // Database configuration
@@ -98,6 +104,7 @@ const config = {
   // Qwen-specific configuration
   qwen: {
     videoModel: process.env.QWEN_VIDEO_MODEL || 'wan2.6-i2v',
+    llmModel: process.env.QWEN_LLM_MODEL || 'qwen-plus', // qwen-plus, qwen-turbo, qwen-max
     baseUrl: process.env.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/api/v1',
   },
 

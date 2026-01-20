@@ -1,0 +1,52 @@
+[
+  {
+    "order_index": 0,
+    "image_path": "/uploads/test1.jpg",
+    "image_url": "http://localhost:3000/uploads/test1.jpg",
+    "form_data": {
+      "camera_movement": "push",
+      "shot_type": "medium",
+      "lighting": "natural",
+      "motion_prompt": "Person walking slowly in the park",
+      "checkboxes": {
+        "stabilization": true
+      }
+    },
+    "video": {
+      "status": "completed",
+      "task_id": "task_123",
+      "url": "http://example.com/video1.mp4",
+      "error": ""
+    },
+    "ai_collaboration": [
+      {
+        "user_input": "Too slow",
+        "ai_suggestion": "Increase motion speed",
+        "timestamp": "2025-01-01T00:00:00Z"
+      }
+    ],
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:00:00Z"
+  },
+  {
+    "order_index": 1,
+    "image_path": "/uploads/test2.jpg",
+    "image_url": "http://localhost:3000/uploads/test2.jpg",
+    "form_data": {
+      "camera_movement": "pan",
+      "shot_type": "wide",
+      "lighting": "soft",
+      "motion_prompt": "City skyline at sunset",
+      "checkboxes": {}
+    },
+    "video": {
+      "status": "pending",
+      "task_id": "",
+      "url": "",
+      "error": ""
+    },
+    "ai_collaboration": [],
+    "created_at": "2025-01-02T00:00:00Z",
+    "updated_at": "2025-01-02T00:00:00Z"
+  }
+]

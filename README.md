@@ -56,6 +56,23 @@ This represents a new era of software development where humans focus on **WHAT t
 
 ---
 
+## 🆕 Recent Updates
+
+### v1.1 (January 2025) - Enhanced Video Generation ✨
+
+New features for precise video control:
+
+- 🕒 **Duration Control**: Choose video length (5s/10s/15s) based on your needs
+- 📐 **Aspect Ratio Selection**: Support for multiple formats (16:9/9:16/1:1/4:3) optimized for different platforms
+- ⚡ **Motion Intensity**: Fine-tune movement dynamics with 5-level slider (1-5 scale)
+- 🎨 **Quality Presets**: Balance speed and quality (Draft/Standard/High) with time estimates
+
+**Fully backward compatible with v1.0 workspaces!**
+
+See [Release Notes](context/RELEASE_NOTES_v1.1.md) for detailed information.
+
+---
+
 ## 🎯 Project Overview
 
 This is an **MVP-stage** platform focusing on the core Image-to-Video generation workflow. Users can:

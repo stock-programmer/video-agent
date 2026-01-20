@@ -97,7 +97,10 @@ export async function suggest(workspaceData, userInput) {
 
     return suggestion;
   } catch (error) {
-    logger.error('Gemini AI 建议获取失败:', error);
+    logger.error('Gemini AI 建议获取失败', {
+      error: error.message,
+      stack: error.stack
+    });
 
     // 处理特定错误
     if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('invalid API key')) {
@@ -189,7 +192,10 @@ function parseAISuggestion(content) {
       explanation: parsed.explanation || '建议已生成'
     };
   } catch (error) {
-    logger.error('AI 返回格式解析失败:', error);
+    logger.error('AI 返回格式解析失败', {
+      error: error.message,
+      contentLength: content?.length || 0
+    });
     logger.debug('原始内容:', content);
 
     // 如果解析失败,尝试提取 JSON 部分

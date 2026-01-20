@@ -3,12 +3,14 @@ import cors from 'cors';
 import config from './config.js';
 import logger from './utils/logger.js';
 import { connectDB } from './db/mongodb.js';
-import { startWebSocketServer } from './websocket/server.js';
+import { startWebSocketServer, broadcastToWorkspace } from './websocket/server.js';
 import { uploadImage, handleUpload, handleUploadError } from './api/upload-image.js';
 import { getWorkspaces } from './api/get-workspaces.js';
 import { generateVideo } from './api/generate-video.js';
 import { getAISuggestion } from './api/ai-suggest.js';
 import { hardDeleteWorkspace } from './api/hard-delete-workspace.js';
+import optimizePromptRouter from './api/optimize-prompt.js';
+import { requestLogger, notFoundHandler, globalErrorHandler } from './utils/error-handler.js';
 
 const app = express();
 
@@ -26,13 +28,11 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' })); // Parse JSON requests
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded requests
 
-// Request logging middleware (development only)
-if (config.isDevelopment) {
-  app.use((req, res, next) => {
-    logger.debug(`${req.method} ${req.path}`);
-    next();
-  });
-}
+// Set WebSocket broadcast function for API routes
+app.set('wsBroadcast', broadcastToWorkspace);
+
+// Request logging middleware (v2.0 unified error handling)
+app.use(requestLogger);
 
 // ============================================================
 // Static File Serving
@@ -73,7 +73,12 @@ app.post('/api/ai/suggest', getAISuggestion);
 // Hard delete workspace API
 app.delete('/api/workspace/:id/hard-delete', hardDeleteWorkspace);
 
-// TODO: Add more API routes here in Layer 4
+// ============================================================
+// v2.0 API Routes
+// ============================================================
+
+// Optimize prompt API (v2.0)
+app.use('/api', optimizePromptRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -90,35 +95,17 @@ app.get('/', (req, res) => {
 });
 
 // ============================================================
-// Error Handling Middleware
+// Error Handling Middleware (v2.0)
 // ============================================================
 
 // Multer upload error handler (must come before 404 handler)
 app.use(handleUploadError);
 
 // 404 Not Found handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Cannot ${req.method} ${req.path}`,
-    path: req.path,
-  });
-});
+app.use(notFoundHandler);
 
 // Global error handler
-app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', err);
-
-  // Don't expose internal errors in production
-  const message = config.isProduction ? 'Internal Server Error' : err.message;
-  const stack = config.isDevelopment ? err.stack : undefined;
-
-  res.status(err.status || 500).json({
-    error: err.name || 'Error',
-    message,
-    ...(stack && { stack }),
-  });
-});
+app.use(globalErrorHandler);
 
 // ============================================================
 // Server Startup

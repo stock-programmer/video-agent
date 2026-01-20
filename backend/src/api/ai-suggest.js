@@ -1,7 +1,28 @@
-import { suggest } from '../services/llm-gemini.js';
+import * as llmGemini from '../services/llm-gemini.js';
+import * as llmQwen from '../services/llm-qwen.js';
 import { Workspace } from '../db/mongodb.js';
 import logger from '../utils/logger.js';
 import config from '../config.js';
+
+/**
+ * 获取当前配置的 LLM 服务
+ * 支持动态切换 LLM 提供商
+ */
+function getLLMService() {
+  const provider = config.llm.provider;
+
+  switch (provider) {
+    case 'gemini':
+      logger.debug('使用 Gemini LLM 服务');
+      return llmGemini;
+    case 'qwen':
+      logger.debug('使用 Qwen LLM 服务');
+      return llmQwen;
+    default:
+      logger.warn(`未知的 LLM 提供商: ${provider}, 默认使用 Gemini`);
+      return llmGemini;
+  }
+}
 
 /**
  * AI 协作建议 API
@@ -81,7 +102,8 @@ export async function getAISuggestion(req, res) {
       llm_provider: config.llm.provider
     });
 
-    const suggestion = await suggest(workspace, user_input);
+    const llmService = getLLMService();
+    const suggestion = await llmService.suggest(workspace, user_input);
 
     logger.info('AI 建议获取成功', {
       workspace_id,
@@ -110,7 +132,9 @@ export async function getAISuggestion(req, res) {
     logger.error('AI 建议获取失败:', error);
 
     // 处理特定错误
-    if (error.message?.includes('API Key') || error.message?.includes('GOOGLE_API_KEY')) {
+    if (error.message?.includes('API Key') ||
+        error.message?.includes('GOOGLE_API_KEY') ||
+        error.message?.includes('DASHSCOPE_API_KEY')) {
       return res.status(500).json({
         success: false,
         error: {
@@ -120,7 +144,9 @@ export async function getAISuggestion(req, res) {
       });
     }
 
-    if (error.message?.includes('配额') || error.message?.includes('quota')) {
+    if (error.message?.includes('配额') ||
+        error.message?.includes('quota') ||
+        error.message?.includes('频率超限')) {
       return res.status(503).json({
         success: false,
         error: {
@@ -130,7 +156,9 @@ export async function getAISuggestion(req, res) {
       });
     }
 
-    if (error.message?.includes('权限') || error.message?.includes('permission')) {
+    if (error.message?.includes('权限') ||
+        error.message?.includes('permission') ||
+        error.message?.includes('无效')) {
       return res.status(500).json({
         success: false,
         error: {

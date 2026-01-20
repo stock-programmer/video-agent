@@ -14,9 +14,6 @@ export function ImageUpload({ workspaceId, imageUrl }: Props) {
   const [imageError, setImageError] = useState(false);
   const updateWorkspace = useWorkspaceStore(s => s.updateWorkspace);
 
-  // 调试：打印 imageUrl
-  console.log('[ImageUpload] workspaceId:', workspaceId, 'imageUrl:', imageUrl);
-
   const validateFile = (file: File): boolean => {
     // Check file type
     if (!file.type.startsWith('image/')) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 
@@ -21,21 +21,37 @@ export function AICollaboration({ workspaceId }: Props) {
   const [error, setError] = useState<string>('');
   const updateWorkspace = useWorkspaceStore(s => s.updateWorkspace);
 
+  // Debug: Log suggestion state changes
+  useEffect(() => {
+    console.log('[AICollaboration] Suggestion state changed:', suggestion);
+  }, [suggestion]);
+
   const handleSubmit = async () => {
     if (!input.trim()) {
       setError('请输入您的需求');
       return;
     }
 
+    console.log('[AICollaboration] Submitting request:', { workspaceId, input });
+
     setLoading(true);
     setError('');
+    setSuggestion(null); // Clear previous suggestion
 
     try {
       const result = await api.getAISuggestion(workspaceId, input);
+      console.log('[AICollaboration] Received suggestion:', result);
+
+      if (!result) {
+        throw new Error('未收到 AI 建议响应');
+      }
+
       setSuggestion(result);
+      console.log('[AICollaboration] Suggestion state updated');
     } catch (err: any) {
-      console.error('获取建议失败:', err);
-      setError(err.response?.data?.error || '获取建议失败，请重试');
+      console.error('[AICollaboration] Error:', err);
+      const errorMessage = err.response?.data?.error?.message || err.message || '获取建议失败，请重试';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -64,18 +80,12 @@ export function AICollaboration({ workspaceId }: Props) {
   };
 
   return (
-    <div className="border rounded-lg p-4 flex flex-col h-full bg-white">
-      {/* Header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">AI 协作助手</h3>
-        <p className="text-sm text-gray-500 mt-1">描述您的创意需求，AI 将为您提供专业建议</p>
-      </div>
-
+    <div className="border rounded-lg p-4 bg-white">
       {/* Input Area */}
-      <div className="flex-1 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <div>
           <label htmlFor={`ai-input-${workspaceId}`} className="block text-sm font-medium text-gray-700 mb-2">
-            您的需求
+            描述您的创意需求
           </label>
           <textarea
             id={`ai-input-${workspaceId}`}
@@ -84,7 +94,7 @@ export function AICollaboration({ workspaceId }: Props) {
             onKeyPress={handleKeyPress}
             placeholder="例如：我想要一个温馨的家庭场景，人物从左侧走向右侧..."
             className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={4}
+            rows={3}
             disabled={loading}
           />
           <p className="text-xs text-gray-500 mt-1">提示: Ctrl+Enter 快速提交</p>
@@ -172,7 +182,7 @@ export function AICollaboration({ workspaceId }: Props) {
 
       {/* Footer Tip */}
       {!suggestion && !loading && !error && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-3 pt-3 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
             💡 AI 助手可以根据您的描述推荐最佳的运镜、景别和光线设置
           </p>

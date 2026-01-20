@@ -14,6 +14,46 @@ const API_BASE = 'https://dashscope.aliyuncs.com/api/v1';
  * 使用阿里云 DashScope 平台的通义千问视频生成能力
  */
 
+// ===== v1.1: 辅助函数 =====
+
+/**
+ * 将quality_preset映射到Qwen API的resolution参数
+ * 基于Task 1.1 API验证结果：API支持720P/1080P
+ */
+function mapQualityToResolution(quality_preset) {
+  const mapping = {
+    'draft': '720P',      // 快速预览
+    'standard': '1080P',  // 推荐
+    'high': '1080P'       // 与standard相同（API限制）
+  };
+  return mapping[quality_preset] || '1080P';
+}
+
+/**
+ * 根据motion_intensity为prompt添加运动强度关键词
+ * 基于Task 1.1 API验证结果：API不支持motion_intensity参数，需通过prompt增强实现
+ */
+function enhancePromptWithIntensity(prompt, motion_intensity) {
+  // 默认值为3（中等强度），不修改prompt
+  if (motion_intensity === 3 || !motion_intensity) {
+    return prompt;
+  }
+
+  const intensityKeywords = {
+    1: 'very slowly, with subtle and minimal movement',
+    2: 'slowly and gently',
+    3: '',  // 默认，不添加
+    4: 'quickly with dynamic motion',
+    5: 'very fast, with high energy and rapid movements'
+  };
+
+  const keyword = intensityKeywords[motion_intensity];
+  if (!keyword) return prompt;
+
+  // 将关键词附加到prompt末尾
+  return `${prompt}, ${keyword}`;
+}
+
 // 生成视频
 export async function generate(workspaceId, formData) {
   try {
@@ -29,17 +69,35 @@ export async function generate(workspaceId, formData) {
 
     logger.info(`开始生成视频: workspace=${workspaceId}`);
 
+    // ===== v1.1: 提取新参数（带默认值） =====
+    const duration = formData.duration || 5;  // 默认5秒（API最小值）
+    const quality_preset = formData.quality_preset || 'standard';
+    const motion_intensity = formData.motion_intensity || 3;
+    // aspect_ratio由输入图片决定，API不支持直接设置
+
+    // ===== v1.1: 映射参数 =====
+    const resolution = mapQualityToResolution(quality_preset);
+
+    // 构建prompt（包含motion_intensity增强）
+    const basePrompt = buildPrompt(formData);
+    const enhancedPrompt = enhancePromptWithIntensity(basePrompt, motion_intensity);
+
+    logger.debug(`v1.1参数: duration=${duration}, quality_preset=${quality_preset}, resolution=${resolution}, motion_intensity=${motion_intensity}`);
+    logger.debug(`原始prompt: ${basePrompt}`);
+    logger.debug(`增强后prompt: ${enhancedPrompt}`);
+
     // 构建请求体
     const requestBody = {
       model: config.qwen.videoModel || 'wan2.6-i2v',
       input: {
-        prompt: buildPrompt(formData),
+        prompt: enhancedPrompt,
         //img_url: workspace.image_url
-        img_url: 'https://img2.baidu.com/it/u=558600243,2109149929&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1067'
+        //img_url: 'https://img2.baidu.com/it/u=558600243,2109149929&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1067'
+        img_url: 'https://miaobi-lite.cdn.bcebos.com/miaobi/5mao/b%275Zu%2B54mH5Yqo5ryr5ZSv576OXzE3MjkwNTA4NTkuMjI1ODczMg%3D%3D%27/0.png'
       },
       parameters: {
-        resolution: '720P',
-        duration: 5,  // 视频时长（秒）
+        resolution: resolution,  // v1.1: 基于quality_preset映射
+        duration: duration,      // v1.1: 5/10/15秒
         prompt_extend: true,
         watermark: false
       }
@@ -221,7 +279,11 @@ function startPolling(workspaceId, taskId) {
         setTimeout(poll, interval);
       }
     } catch (error) {
-      logger.error('轮询失败:', error);
+      logger.error('轮询失败', {
+        error: error.message,
+        status: error.response?.status,
+        workspaceId
+      });
 
       // 如果是认证错误或其他严重错误，停止轮询
       if (error.response?.status === 401 || error.response?.status === 403) {

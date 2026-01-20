@@ -6,25 +6,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is an **AI-driven video generation SaaS platform** (MVP stage) that enables human-AI collaborative creative video production workflows. The core feature is **Image-to-Video** generation.
 
+**Version Status:**
+- **v1.0 (MVP)**: ✅ Completed and deployed (Dec 2024)
+- **v1.1**: ✅ Completed (Jan 2025) - Enhanced video generation parameters
+
 **Key characteristics:**
 - Single-user assumption (no authentication system in MVP)
 - Near real-time state synchronization (draft-like auto-save)
 - Flexible third-party API integration (video generation and LLM services)
 - Streamlined architecture focusing on core functionality
 
-**Current Status:**
-- **Frontend**: ✅ Implemented (React 19 + TypeScript + Vite + TailwindCSS 4)
-  - All core components completed
-  - Zustand state management configured
+**Current Status (v1.1):**
+- **Frontend**: ✅ Updated with enhanced video generation controls
+  - Duration control (5s/10s/15s) with dropdown selector
+  - Aspect ratio selection (16:9/9:16/1:1/4:3) with icon buttons
+  - Motion intensity slider (1-5 scale) with visual feedback
+  - Quality preset selector (draft/standard/high) with time estimates
+  - All core components updated for v1.1
+  - Backward compatible with v1.0 workspaces
+  - Zustand state management with default value handling
   - API and WebSocket client services ready
   - Responsive UI with horizontal scrolling timeline
-- **Backend**: ✅ Implemented (Node.js + Express + WebSocket + MongoDB)
-  - All core modules completed
-  - REST API endpoints implemented
-  - WebSocket real-time sync implemented
+- **Backend**: ✅ Updated with v1.1 parameter validation and handling
+  - All core modules updated for v1.1
+  - REST API endpoints with v1.1 parameter validation
+  - WebSocket handlers support incremental updates for v1.1 fields
+  - Default value handling for backward compatibility
   - Third-party service integrations (Qwen video + Gemini LLM) completed
   - Winston logging configured
-  - Integration tests passed
+  - Integration tests passed (v1.0 + v1.1)
 - **Third-party APIs**: ✅ Verified and Integrated
   - Qwen video generation (DashScope wan2.6-i2v) - tested and integrated
   - Google Gemini 3 LLM (gemini-3-flash-preview) - tested and integrated
@@ -39,7 +49,12 @@ This is an **AI-driven video generation SaaS platform** (MVP stage) that enables
 - **Layout**: Horizontal scrolling timeline with multiple workspaces
 - **Key Features**:
   - Image upload
-  - Video generation form (camera movement, shot type, lighting, motion prompts)
+  - Video generation form with v1.1 enhancements:
+    - Camera movement, shot type, lighting, motion prompts (v1.0)
+    - Duration control (5s/10s/15s) (v1.1)
+    - Aspect ratio selection (16:9/9:16/1:1/4:3) (v1.1)
+    - Motion intensity slider (1-5) (v1.1)
+    - Quality preset (draft/standard/high) (v1.1)
   - Video player
   - AI collaboration assistant
 
@@ -60,9 +75,14 @@ This is an **AI-driven video generation SaaS platform** (MVP stage) that enables
 
 **State Management:**
 - `workspaceStore.ts` - Zustand store for workspace state management
+  - v1.1: Includes default value handling for new parameters
+  - v1.1: Debounced WebSocket sync (300ms) for form updates
 
 **Type Definitions:**
 - `workspace.ts` - TypeScript interfaces for workspace data
+  - v1.1: Added Duration, AspectRatio, MotionIntensity, QualityPreset types
+  - v1.1: Added validation functions (isDuration, isAspectRatio, etc.)
+  - v1.1: Added default constants (DEFAULT_DURATION, DEFAULT_ASPECT_RATIO, etc.)
 
 ### Backend
 - **Tech Stack**: Node.js + Express + WebSocket (✅ Implemented)
@@ -126,8 +146,9 @@ User submits → Backend calls third-party API → Get task_id
 
 Before starting development, read these in order:
 
-1. **`context/business.md`** - Complete business requirements and product design
-2. **Backend Architecture Documentation** (detailed design split into multiple files):
+1. **`context/business.md`** - Complete business requirements and product design (v1.0 MVP)
+2. **`context/business-v1-1.md`** - v1.1 feature planning and updates ✅ Completed (Jan 2025)
+3. **Backend Architecture Documentation** (detailed design split into multiple files):
    - **`context/backend-architecture.md`** - Architecture overview and navigation (start here)
    - **`context/backend-api-design.md`** - REST API and WebSocket communication design
    - **`context/backend-database-design.md`** - MongoDB schema, indexes, and queries
@@ -135,7 +156,7 @@ Before starting development, read these in order:
    - **`context/backend-config.md`** - Environment variables and configuration management
    - **`context/backend-testing.md`** - Testing strategy and tools
    - **`context/backend-deployment.md`** - Deployment guide and operations
-3. **Development Plans** (DAG-based task breakdown):
+4. **Development Plans** (DAG-based task breakdown):
    - **`context/backend-dev-plan.md`** - Backend development DAG overview
    - **`context/frontend-dev-plan.md`** - Frontend development DAG overview
    - **`context/tasks/README.md`** - Complete DAG task index (start here for development)
@@ -272,6 +293,93 @@ The `ai-output-resource/` directory is dedicated to storing all AI-generated out
 
 ## Development Best Practices
 
+### Critical Development Principles
+
+**IMPORTANT**: These principles MUST be followed in all development work to ensure system reliability and maintainability.
+
+#### 1. DAG Task Planning and Dependency Management
+
+When creating DAG (Directed Acyclic Graph) task plans for new features:
+
+- **Think Carefully About Dependencies**: Before marking tasks as parallel, carefully analyze whether they have implicit dependencies
+- **Self-Reflection is Required**: Ask yourself:
+  - Does Task B need data/code/infrastructure from Task A?
+  - Does Task B assume Task A's side effects (DB changes, file creation, etc.)?
+  - Would Task B fail or behave incorrectly if Task A hasn't completed?
+- **Be Conservative**: When in doubt, assume a dependency exists - sequential execution is safer than parallel execution with hidden dependencies
+- **Clear Dependency Documentation**: Each task must explicitly list ALL its dependencies, not just the obvious ones
+- **Example Anti-pattern**:
+  - ❌ WRONG: Marking "Implement API endpoint" and "Create database schema" as parallel tasks
+  - ✅ CORRECT: "Create database schema" must complete before "Implement API endpoint"
+
+#### 2. Backward Compatibility and Non-Breaking Changes
+
+When developing new features or requirements:
+
+- **Add, Don't Modify (Priority #1)**: Always prefer adding new code over modifying existing code
+  - Create new files/functions/modules for new features
+  - Extend existing interfaces rather than changing them
+  - Use feature flags to toggle between old and new behavior
+- **If Modification is Unavoidable**:
+  - Ensure old code paths continue to work (backward compatibility)
+  - Add default values for new parameters
+  - Maintain existing API contracts
+  - Write migration scripts if data structures change
+- **Mandatory Regression Testing**:
+  - Run ALL existing tests before considering the work complete
+  - Manually test old workflows to ensure they still work
+  - Document any breaking changes explicitly (should be rare)
+- **Example v1.1 Development** (Reference):
+  - ✅ Added new fields (`duration`, `aspect_ratio`, etc.) with default values
+  - ✅ Old workspaces without new fields continue to work
+  - ✅ All v1.0 API endpoints still function identically
+  - ✅ Integration tests verify both v1.0 and v1.1 workflows
+
+**Golden Rule**: Old code should never break because of new features. The system must remain stable for existing users/workflows.
+
+#### 3. Comprehensive Request/Response Logging for Testing and Debugging
+
+When implementing any feature that involves external communication (APIs, WebSocket, third-party services):
+
+- **Log ALL Requests and Responses**: Every HTTP request, WebSocket message, and third-party API call must be logged
+  - Log request parameters, headers, body
+  - Log response status, headers, body
+  - Log timestamps for performance tracking
+  - Log error details and stack traces
+- **Structured Logging**: Use Winston logger with appropriate log levels
+  - `debug`: Detailed diagnostic information (request/response bodies)
+  - `info`: General operational information (API calls started/completed)
+  - `warn`: Warning conditions (retries, timeouts)
+  - `error`: Error conditions (failures, exceptions)
+- **Purpose of Detailed Logging**:
+  - **Self-debugging**: Review logs to understand what happened during execution
+  - **Testing**: Verify correct API parameters were sent
+  - **Troubleshooting**: Identify where failures occurred in the request/response chain
+  - **Performance Analysis**: Track request durations and identify bottlenecks
+- **Implementation Guidelines**:
+  - Log BEFORE making external calls (intent and parameters)
+  - Log AFTER receiving responses (results and status)
+  - Log during error handling (what went wrong and why)
+  - Use consistent log formats for easy parsing
+- **Example Pattern** (from existing codebase):
+  ```javascript
+  logger.info('Starting video generation', { workspaceId, params });
+  try {
+    const response = await thirdPartyAPI.generate(params);
+    logger.info('Video generation submitted', { taskId: response.task_id });
+    // ... polling logic with logs
+    logger.info('Video generation completed', { taskId, videoUrl });
+  } catch (error) {
+    logger.error('Video generation failed', { error: error.message, stack: error.stack });
+  }
+  ```
+
+**Logging Best Practices**:
+- Never log sensitive data (API keys, user passwords)
+- Use log rotation to prevent disk space issues
+- Include correlation IDs to trace multi-step operations
+- Log level should be configurable via environment variables
+
 ### DAG-Based Development Workflow
 
 **IMPORTANT**: This project uses a DAG (Directed Acyclic Graph) task execution model.
@@ -332,11 +440,18 @@ Layer 1 (Environment) → Layer 2 (Infrastructure) → Layer 3 (Core Services)
   image_path: String,
   image_url: String,
   form_data: {
+    // v1.0 fields
     camera_movement: String,
     shot_type: String,
     lighting: String,
     motion_prompt: String,
-    checkboxes: Object
+    checkboxes: Object,
+
+    // v1.1 fields (added Jan 2025)
+    duration: Number,              // 5, 10, or 15 seconds (default: 5)
+    aspect_ratio: String,          // '16:9', '9:16', '1:1', '4:3' (default: '16:9')
+    motion_intensity: Number,      // 1-5 scale (default: 3)
+    quality_preset: String         // 'draft', 'standard', 'high' (default: 'standard')
   },
   video: {
     status: String,  // pending/generating/completed/failed
