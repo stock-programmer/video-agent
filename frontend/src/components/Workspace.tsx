@@ -5,16 +5,14 @@ import { VideoPlayer } from './VideoPlayer';
 import { AICollaboration } from './AICollaboration';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 
-// v2.0 新增组件
 import { OptimizeButton } from './OptimizeButton';
 import { AIOutputArea } from './AIOutputArea';
 
-// 图标
-import { Trash2, RotateCcw, X, Image as ImageIcon, Video, MessageSquare, MonitorPlay, Sparkles } from 'lucide-react';
+import { Trash2, RotateCcw, X, Image as ImageIcon, MessageSquare, Sparkles, Play } from 'lucide-react';
 
 interface Props {
   workspace: WorkspaceType;
-  isDeleted?: boolean;  // 是否在删除轴上
+  isDeleted?: boolean;
 }
 
 export function Workspace({ workspace, isDeleted = false }: Props) {
@@ -35,76 +33,110 @@ export function Workspace({ workspace, isDeleted = false }: Props) {
   };
 
   return (
-    <div className={`relative w-full max-w-7xl mx-auto border rounded-2xl p-4 sm:p-6 transition-all duration-300 ${isDeleted ? 'opacity-75 bg-red-50 border-red-200' : 'bg-white border-slate-200 shadow-lg hover:shadow-2xl'}`}>
-      {/* 操作按钮组 - 响应式定位，确保 44x44px 最小触摸目标 */}
-      <div className="absolute top-2 right-2 z-10 flex gap-2">
+    <div className={`relative w-full border rounded-2xl backdrop-blur-xl transition-all duration-300 overflow-hidden group ${isDeleted
+      ? 'bg-slate-900/20 border-slate-800/30 opacity-75'
+      : 'bg-slate-900/40 border-slate-800/50 hover:border-rose-500/30 hover:bg-slate-900/60 shadow-lg hover:shadow-xl hover:shadow-rose-500/10'
+    }`}>
+
+      {/* Action Buttons */}
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
         {!isDeleted ? (
-          <button onClick={handleSoftDelete} className="p-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all duration-200 hover:shadow-md" title="删除工作空间" aria-label="删除工作空间">
+          <button
+            onClick={handleSoftDelete}
+            className="p-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 rounded-lg transition-all duration-200 border border-rose-500/30 hover:border-rose-500/50 cursor-pointer"
+            title="删除工作空间"
+            aria-label="删除工作空间"
+          >
             <Trash2 className="w-5 h-5" />
           </button>
         ) : (
           <>
-            <button onClick={handleRestore} className="p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg transition-all duration-200 hover:shadow-md" title="恢复工作空间" aria-label="恢复工作空间">
+            <button
+              onClick={handleRestore}
+              className="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 rounded-lg transition-all duration-200 border border-emerald-500/30 hover:border-emerald-500/50 cursor-pointer"
+              title="恢复工作空间"
+              aria-label="恢复工作空间"
+            >
               <RotateCcw className="w-5 h-5" />
             </button>
-            <button onClick={handleHardDelete} className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 hover:shadow-md" title="永久删除" aria-label="永久删除工作空间">
+            <button
+              onClick={handleHardDelete}
+              className="p-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-all duration-200 border border-rose-500/50 hover:border-rose-400 cursor-pointer"
+              title="永久删除"
+              aria-label="永久删除工作空间"
+            >
               <X className="w-5 h-5" />
             </button>
           </>
         )}
       </div>
 
-      {/* ========== 第一行：图片上传 | AI智能优化 ========== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <div>
-          <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
-            <span>上传图片</span>
-          </h3>
-          <ImageUpload workspaceId={workspace._id} imageUrl={workspace.image_url} />
-        </div>
+      <div className="p-6 sm:p-8">
+        {/* Main Grid: Left Column (Image + Form) & Right Column (AI Optimize + Collaboration) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
+          {/* Left Column: Image Upload & Video Form */}
+          <div className="flex flex-col gap-6 sm:gap-8">
+            {/* Image Upload */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-rose-500/20 rounded-lg">
+                  <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-rose-400" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-slate-50">上传图片</h3>
+              </div>
+              <ImageUpload workspaceId={workspace._id} imageUrl={workspace.image_url} />
+            </div>
 
-        <div>
-          <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
-            <span>AI 智能优化</span>
-            <span className="ml-auto text-xs bg-gradient-to-r from-sky-500 to-violet-600 text-white px-2 py-1 rounded-full font-medium shadow-sm">核心功能</span>
-          </h3>
-          <div className="mb-3">
-            <OptimizeButton workspaceId={workspace._id} videoStatus={workspace.video?.status || 'pending'} videoUrl={workspace.video?.url} formData={workspace.form_data} />
+            {/* Video Form */}
+            <div>
+              <VideoForm workspaceId={workspace._id} formData={workspace.form_data} optimizationAppliedAt={workspace.optimization_applied_at} />
+            </div>
           </div>
-          <div className="border rounded-xl bg-gradient-to-br from-sky-50 to-violet-50 border-indigo-200 p-4 overflow-y-auto max-h-[350px] shadow-sm hover:shadow-md transition-shadow duration-300">
-            <AIOutputArea workspaceId={workspace._id} />
+
+          {/* Right Column: Video Preview + AI Optimize + AI Collaboration */}
+          <div className="flex flex-col gap-6 sm:gap-8">
+            {/* Video Preview */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-slate-50">视频预览</h3>
+              </div>
+              <VideoPlayer video={workspace.video} />
+            </div>
+
+            {/* AI Optimize */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-violet-500/20 rounded-lg">
+                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-50">AI 智能优化</h3>
+                </div>
+                <span className="text-xs bg-gradient-to-r from-rose-500 to-violet-600 text-white px-3 py-1 rounded-full font-medium">核心功能</span>
+              </div>
+              <div className="mb-4">
+                <OptimizeButton workspaceId={workspace._id} videoStatus={workspace.video?.status || 'pending'} videoUrl={workspace.video?.url} formData={workspace.form_data} />
+              </div>
+              <div className="border border-slate-800/50 rounded-xl bg-gradient-to-br from-slate-900/50 to-violet-900/30 p-4 overflow-y-auto max-h-[350px] shadow-sm hover:shadow-md transition-shadow duration-300">
+                <AIOutputArea workspaceId={workspace._id} />
+              </div>
+            </div>
+
+            {/* AI Collaboration */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-slate-50">AI 协作</h3>
+              </div>
+              <AICollaboration workspaceId={workspace._id} />
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* ========== 第二行：生成表单 | AI协作助手 ========== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <div>
-          <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <Video className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
-            <span>视频生成参数</span>
-          </h3>
-          <VideoForm workspaceId={workspace._id} formData={workspace.form_data} optimizationAppliedAt={workspace.optimization_applied_at} />
-        </div>
-
-        <div>
-          <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-            <span>AI 协作助手</span>
-          </h3>
-          <AICollaboration workspaceId={workspace._id} />
-        </div>
-      </div>
-
-      {/* ========== 第三行：视频播放器 ========== */}
-      <div>
-        <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-          <MonitorPlay className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
-          <span>视频预览</span>
-        </h3>
-        <VideoPlayer video={workspace.video} />
       </div>
     </div>
   );

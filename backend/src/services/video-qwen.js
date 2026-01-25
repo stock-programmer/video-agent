@@ -92,8 +92,10 @@ export async function generate(workspaceId, formData) {
       input: {
         prompt: enhancedPrompt,
         //img_url: workspace.image_url
+        img_url: 'https://s41.ax1x.com/2026/01/23/pZgyHa9.jpg'
+        //img_url: 'https://image-to-video-333.oss-cn-beijing.aliyuncs.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260123201520.jpg?Expires=1769173578&OSSAccessKeyId=TMP.3KoC1mE5EgHRxWtjMuMqdSofcXrn9cN1VEMWA6sjr6L8L8YZ7mrDuPsUf9qrnGiQScJn7qQXouvrxvZNLPw1KFos8Rq3XT&Signature=u%2FIJShXw%2BhhLpOFniIyKC14zpmU%3D'
         //img_url: 'https://img2.baidu.com/it/u=558600243,2109149929&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1067'
-        img_url: 'https://miaobi-lite.cdn.bcebos.com/miaobi/5mao/b%275Zu%2B54mH5Yqo5ryr5ZSv576OXzE3MjkwNTA4NTkuMjI1ODczMg%3D%3D%27/0.png'
+        //img_url: 'https://miaobi-lite.cdn.bcebos.com/miaobi/5mao/b%275Zu%2B54mH5Yqo5ryr5ZSv576OXzE3MjkwNTA4NTkuMjI1ODczMg%3D%3D%27/0.png'
       },
       parameters: {
         resolution: resolution,  // v1.1: 基于quality_preset映射

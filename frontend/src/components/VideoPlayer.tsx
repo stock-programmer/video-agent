@@ -18,37 +18,49 @@ export function VideoPlayer({ video }: Props) {
   };
 
   if (!video || video.status === 'pending') {
-    return <div className="border rounded p-8 text-center">未生成视频</div>;
+    return (
+      <div className="border border-slate-800/50 rounded-lg p-4 text-center bg-slate-900/40 backdrop-blur-sm">
+        <p className="text-sm text-slate-500">未生成视频</p>
+      </div>
+    );
   }
 
   if (video.status === 'generating') {
     return (
-      <div className="border rounded p-8 text-center bg-blue-50">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
-        <div className="text-blue-600 font-medium mb-2">🎬 视频正在生成中</div>
-        <div className="text-sm text-gray-600 mb-1">
-          预计需要 2-3 分钟
-        </div>
-        <div className="text-sm text-gray-500">
-          您可以并行生成下一个工作空间的视频
-        </div>
+      <div className="border border-blue-500/30 rounded-lg p-4 text-center bg-blue-900/20 backdrop-blur-sm">
+        <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400 mb-2"></div>
+        <div className="text-blue-400 font-medium text-sm mb-1">视频生成中</div>
+        <div className="text-xs text-slate-500">预计 2-3 分钟</div>
       </div>
     );
   }
 
   if (video.status === 'failed') {
-    return <div className="border rounded p-8 text-center text-red-500">生成失败: {video.error}</div>;
+    return (
+      <div className="border border-red-500/30 rounded-lg p-4 text-center bg-red-900/20 backdrop-blur-sm">
+        <p className="text-sm text-red-400">生成失败: {video.error}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="border rounded p-4">
-      <video src={video.url} controls className="w-full mb-3" />
+    <div className="space-y-2 w-full">
+      {/* 缩略图视频播放器 */}
+      <div className="relative group">
+        <video
+          src={video.url}
+          controls
+          className="w-full h-[672px] rounded-lg border border-slate-800/50 bg-black shadow-lg object-cover"
+        />
+      </div>
+
+      {/* 下载按钮 */}
       <button
         onClick={handleDownload}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
       >
         <svg
-          className="w-5 h-5"
+          className="w-4 h-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

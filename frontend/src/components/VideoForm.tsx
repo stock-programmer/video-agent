@@ -155,14 +155,12 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border rounded p-4 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* ===== 基础参数区域 (v1.1新增) ===== */}
-      <div className="form-section bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">基础参数</h3>
-
+      <div className="space-y-4 bg-slate-900/40 border border-slate-800/50 p-5 sm:p-6 rounded-xl backdrop-blur-sm">
         {/* Duration 时长选择 */}
-        <div className="mb-4">
-          <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-2">
+        <div>
+          <label htmlFor="duration" className="block text-sm font-medium text-slate-300 mb-3">
             视频时长
           </label>
           <select
@@ -170,7 +168,7 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
             name="duration"
             value={formData.duration}
             onChange={(e) => handleChange('duration', Number(e.target.value) as Duration)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-800/50 text-slate-50 rounded-lg focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all duration-200"
           >
             {DURATION_OPTIONS_META.map(option => (
               <option key={option.value} value={option.value}>
@@ -180,66 +178,25 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
           </select>
         </div>
 
-        {/* Aspect Ratio 宽高比选择 */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            宽高比
+        {/* Motion Prompt (v1.0 保留) */}
+        <div>
+          <label htmlFor="motion_prompt" className="block text-sm font-medium text-slate-300 mb-3">
+            主体运动描述
           </label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {ASPECT_RATIO_OPTIONS_META.map(option => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleChange('aspect_ratio', option.value)}
-                className={`
-                  relative p-3 border-2 rounded-lg transition-all text-center
-                  ${formData.aspect_ratio === option.value
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 hover:border-gray-400 bg-white'
-                  }
-                `}
-              >
-                <div className="text-2xl mb-1">{option.icon}</div>
-                <div className="text-xs font-semibold">{option.label}</div>
-                <div className="text-xs text-gray-500 mt-1">{option.description}</div>
-              </button>
-            ))}
-          </div>
+          <textarea
+            id="motion_prompt"
+            name="motion_prompt"
+            value={formData.motion_prompt}
+            onChange={(e) => handleChange('motion_prompt', e.target.value)}
+            rows={5}
+            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-800/50 text-slate-50 placeholder-slate-600 rounded-lg focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all duration-200 resize-none"
+            placeholder="描述画面中主体的动作、情绪、变化等..."
+          />
         </div>
-
-        {/* Quality Preset 质量预设 */}
-        <div className="mb-0">
-          <label htmlFor="quality_preset" className="block text-sm font-medium text-gray-700 mb-2">
-            质量预设
-          </label>
-          <select
-            id="quality_preset"
-            name="quality_preset"
-            value={formData.quality_preset}
-            onChange={(e) => handleChange('quality_preset', e.target.value as QualityPreset)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {QUALITY_PRESET_OPTIONS_META.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label} ({option.resolution}, {option.estimatedTime}) {option.value === 'standard' ? '✓ 推荐' : ''}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-gray-500 mt-1">
-            预计生成时间：{
-              QUALITY_PRESET_OPTIONS_META.find(o => o.value === formData.quality_preset)?.estimatedTime
-            }
-          </p>
-        </div>
-      </div>
-
-      {/* ===== 运动控制区域 (v1.0 + v1.1) ===== */}
-      <div className="form-section p-4 border border-gray-200 rounded-lg">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">运动控制</h3>
 
         {/* Motion Intensity 运动强度滑块 (v1.1) */}
-        <div className="mb-4">
-          <label htmlFor="motion_intensity" className="block text-sm font-medium text-gray-700 mb-2">
+        <div>
+          <label htmlFor="motion_intensity" className="block text-sm font-medium text-slate-300 mb-3">
             运动强度
           </label>
 
@@ -254,13 +211,13 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
               step={1}
               value={formData.motion_intensity}
               onChange={(e) => handleChange('motion_intensity', Number(e.target.value) as MotionIntensity)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500"
             />
 
             {/* 刻度标记 */}
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs text-slate-500 mt-2">
               {MOTION_INTENSITY_LEVELS.map(level => (
-                <span key={level} className={formData.motion_intensity === level ? 'font-bold text-blue-600' : ''}>
+                <span key={level} className={formData.motion_intensity === level ? 'font-bold text-rose-400' : ''}>
                   {level}
                 </span>
               ))}
@@ -269,37 +226,70 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
 
           {/* 当前选中的强度标签和描述 */}
           <div className="mt-2 text-center">
-            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+            <span className="inline-block px-2 py-1 bg-rose-500/20 border border-rose-500/30 text-rose-300 rounded text-xs font-semibold">
               {MOTION_INTENSITY_LABELS[formData.motion_intensity!]}
             </span>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               {MOTION_INTENSITY_DESCRIPTIONS[formData.motion_intensity!]}
             </p>
           </div>
         </div>
 
-        {/* Motion Prompt (v1.0 保留) */}
-        <div className="mb-0">
-          <label htmlFor="motion_prompt" className="block text-sm font-medium text-gray-700 mb-2">
-            主体运动描述
+        {/* Aspect Ratio 宽高比选择 */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-3">
+            宽高比
           </label>
-          <textarea
-            id="motion_prompt"
-            name="motion_prompt"
-            value={formData.motion_prompt}
-            onChange={(e) => handleChange('motion_prompt', e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            placeholder="描述画面中主体的动作、情绪、变化等..."
-          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {ASPECT_RATIO_OPTIONS_META.map(option => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleChange('aspect_ratio', option.value)}
+                className={`
+                  relative p-4 border-2 rounded-lg transition-all text-center cursor-pointer
+                  ${formData.aspect_ratio === option.value
+                    ? 'border-rose-500 bg-rose-500/20 shadow-lg shadow-rose-500/20'
+                    : 'border-slate-800/50 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-900/60'
+                  }
+                `}
+              >
+                <div className="text-3xl mb-2">{option.icon}</div>
+                <div className="text-xs font-semibold text-slate-50">{option.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quality Preset 质量预设 */}
+        <div>
+          <label htmlFor="quality_preset" className="block text-sm font-medium text-slate-300 mb-3">
+            质量预设
+          </label>
+          <select
+            id="quality_preset"
+            name="quality_preset"
+            value={formData.quality_preset}
+            onChange={(e) => handleChange('quality_preset', e.target.value as QualityPreset)}
+            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-800/50 text-slate-50 rounded-lg focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all duration-200"
+          >
+            {QUALITY_PRESET_OPTIONS_META.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label} ({option.resolution}, {option.estimatedTime}) {option.value === 'standard' ? '✓ 推荐' : ''}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-slate-500 mt-2">
+            预计生成时间：{
+              QUALITY_PRESET_OPTIONS_META.find(o => o.value === formData.quality_preset)?.estimatedTime
+            }
+          </p>
         </div>
       </div>
 
       {/* ===== 镜头控制区域 (v1.0 保留 + v1.2 增强) ===== */}
-      <div className="form-section space-y-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">镜头控制</h3>
-
-        {/* 运镜方式 - 改为 ComboboxInput */}
+      <div className="space-y-4 bg-slate-900/40 border border-slate-800/50 p-5 sm:p-6 rounded-xl backdrop-blur-sm">
+        {/* 运镜方式 - ComboboxInput */}
         <ComboboxInput
           id="camera_movement"
           name="camera_movement"
@@ -310,7 +300,7 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
           placeholder="自由输入或选择预设运镜方式..."
         />
 
-        {/* 景别 - 改为 ComboboxInput */}
+        {/* 景别 - ComboboxInput */}
         <ComboboxInput
           id="shot_type"
           name="shot_type"
@@ -321,7 +311,7 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
           placeholder="自由输入或选择预设景别..."
         />
 
-        {/* 光线 - 改为 ComboboxInput */}
+        {/* 光线 - ComboboxInput */}
         <ComboboxInput
           id="lighting"
           name="lighting"
@@ -358,7 +348,7 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
       {/* Submit Button */}
       <button
         type="submit"
-        className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        className="w-full px-6 py-4 bg-gradient-to-r from-rose-500 to-rose-700 hover:from-rose-600 hover:to-rose-800 text-white font-semibold text-lg rounded-lg shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
       >
         生成视频
       </button>

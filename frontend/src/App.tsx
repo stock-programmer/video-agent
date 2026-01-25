@@ -12,26 +12,29 @@ function AppContent() {
   useEffect(() => {
     fetchWorkspaces();
     connectWebSocket();
-
-    // 清理函数（组件卸载时不需要额外清理，因为 store 是单例）
-    // WebSocket 会在整个应用生命周期中保持连接
   }, [fetchWorkspaces, connectWebSocket]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <header className="sticky top-0 z-50 bg-white shadow-md border-b border-slate-200">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Video className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-indigo-950 pt-8">
+      {/* Header */}
+      <header className="mx-4 mb-4 bg-black/40 backdrop-blur-lg border border-slate-800/50 rounded-2xl shadow-2xl">
+        <div className="px-6 sm:px-8 py-4 sm:py-5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-rose-700 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+              <Video className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-              图生视频工作台
-            </h1>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-50 tracking-tight">
+                Video Maker
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1">AI 驱动的视频创作平台</p>
+            </div>
           </div>
         </div>
       </header>
-      <main className="container mx-auto py-6 sm:py-8">
+
+      {/* Main Content */}
+      <main className="px-4 sm:px-6 pb-12">
         <Timeline />
       </main>
     </div>
