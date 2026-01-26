@@ -124,6 +124,28 @@ const workspaceSchema = new mongoose.Schema({
       confidence: Number
     },
 
+    // ========== v2.0.1 新增字段: 详细分析步骤和思考过程 ==========
+    // 分析步骤 (所有Agent的详细步骤)
+    analysis_steps: [{
+      agent: String,                      // agent名称: intent_analysis, video_analysis, master
+      phase: String,                      // 步骤阶段: visual_analysis, llm_inference等
+      title: String,                      // 步骤标题（中文展示）
+      description: String,                // 步骤详细说明
+      status: {
+        type: String,
+        enum: ['running', 'completed']
+      },
+      result: mongoose.Schema.Types.Mixed, // 步骤结果（可选）
+      timestamp: Date
+    }],
+
+    // AI思考过程 (关键决策点的内部推理)
+    thoughts: [{
+      agent: String,                      // agent名称
+      thought: String,                    // 思考内容
+      timestamp: Date
+    }],
+
     // 用户操作记录
     user_action: {
       type: String,

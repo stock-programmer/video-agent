@@ -101,6 +101,32 @@ class WebSocketClient {
           }
           break;
 
+        case 'agent_step':
+          console.log('[WS] Agent step:', message.step?.title || message.step?.phase);
+          if (store.optimizationStates[workspaceId]) {
+            store.addAnalysisStep(workspaceId, {
+              agent: message.agent,
+              phase: message.step.phase,
+              title: message.step.title,
+              description: message.step.description,
+              status: message.step.status,
+              result: message.step.result,
+              timestamp: message.step.timestamp || message.timestamp || new Date().toISOString()
+            });
+          }
+          break;
+
+        case 'agent_thought':
+          console.log('[WS] Agent thought:', message.thought?.substring(0, 50));
+          if (store.optimizationStates[workspaceId]) {
+            store.addThought(workspaceId, {
+              agent: message.agent,
+              thought: message.thought,
+              timestamp: message.timestamp || new Date().toISOString()
+            });
+          }
+          break;
+
         case 'agent_progress':
           console.log('[WS] Agent progress:', message.message);
           if (store.optimizationStates[workspaceId]) {

@@ -8,7 +8,10 @@ import type {
   IntentReport,
   VideoAnalysis,
   OptimizationResult,
-  ProgressMessage
+  ProgressMessage,
+  AnalysisStep,
+  ThoughtMessage,
+  OptimizationHistoryEntry
 } from '../types/workspace';
 import { DEFAULT_V1_1_FORM_DATA, applyV1_1Defaults } from '../types/workspace';
 
@@ -57,6 +60,14 @@ interface WorkspaceStore {
   setVideoAnalysis: (workspaceId: string, analysis: VideoAnalysis) => void;
   setFinalResult: (workspaceId: string, result: OptimizationResult) => void;
   applyOptimization: (workspaceId: string, optimizedParams: Partial<VideoFormData>) => void;
+
+  // v2.0.1: 新增流式分析步骤和思考过程
+  addAnalysisStep: (workspaceId: string, step: AnalysisStep) => void;
+  addThought: (workspaceId: string, thought: ThoughtMessage) => void;
+
+  // v2.0.1: 从历史记录恢复优化状态
+  restoreOptimizationHistory: (workspaceId: string) => void;
+
   setOptimizationError: (workspaceId: string, error: string) => void;
   resetOptimization: (workspaceId: string) => void;
   setOptimizationComplete: (workspaceId: string) => void;
@@ -163,13 +174,31 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   fetchWorkspaces: async () => {
+    console.log('[Store] Fetching workspaces from API...');
     const workspaces = await api.getWorkspaces();
+    console.log('[Store] Received workspaces:', workspaces.length);
+
     // v1.1: Apply defaults when fetching workspaces
     const normalizedWorkspaces = workspaces.map(ws => ({
       ...ws,
       form_data: applyV1_1Defaults(ws.form_data)
     }));
     set({ workspaces: normalizedWorkspaces });
+
+    // v2.0.1: 恢复每个workspace的优化历史记录（如果存在）
+    console.log('[Store] Checking for optimization history to restore...');
+    normalizedWorkspaces.forEach(ws => {
+      if (ws.optimization_history && ws.optimization_history.length > 0) {
+        console.log(`[Store] Workspace ${ws._id} has optimization history:`, {
+          historyCount: ws.optimization_history.length,
+          latestTimestamp: ws.optimization_history[ws.optimization_history.length - 1].timestamp
+        });
+        get().restoreOptimizationHistory(ws._id);
+      } else {
+        console.log(`[Store] Workspace ${ws._id} has no optimization history`);
+      }
+    });
+    console.log('[Store] Workspace restoration complete');
   },
 
   createWorkspace: async () => {
@@ -280,6 +309,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
           videoAnalysis: null,
           finalResult: null,
           progressMessages: [],
+          analysisSteps: [],        // v2.0.1: 初始化分析步骤列表
+          thoughts: [],             // v2.0.1: 初始化思考过程列表
           error: null
         }
       }
@@ -413,6 +444,90 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
       return { workspaces: updatedWorkspaces };
     });
+  },
+
+  /**
+   * v2.0.1: 添加分析步骤
+   */
+  addAnalysisStep: (workspaceId: string, step: AnalysisStep) => {
+    set((state) => {
+      const optState = state.optimizationStates[workspaceId];
+      if (!optState) return state;
+
+      return {
+        optimizationStates: {
+          ...state.optimizationStates,
+          [workspaceId]: {
+            ...optState,
+            analysisSteps: [...optState.analysisSteps, step]
+          }
+        }
+      };
+    });
+  },
+
+  /**
+   * v2.0.1: 添加AI思考
+   */
+  addThought: (workspaceId: string, thought: ThoughtMessage) => {
+    set((state) => {
+      const optState = state.optimizationStates[workspaceId];
+      if (!optState) return state;
+
+      return {
+        optimizationStates: {
+          ...state.optimizationStates,
+          [workspaceId]: {
+            ...optState,
+            thoughts: [...optState.thoughts, thought]
+          }
+        }
+      };
+    });
+  },
+
+  /**
+   * v2.0.1: 从历史记录恢复优化状态
+   * 在页面刷新后，从 workspace.optimization_history 恢复最新的优化结果
+   */
+  restoreOptimizationHistory: (workspaceId: string) => {
+    const workspace = get().workspaces.find(w => w._id === workspaceId);
+
+    if (!workspace || !workspace.optimization_history || workspace.optimization_history.length === 0) {
+      console.log('[Store] No optimization history to restore for', workspaceId);
+      return;
+    }
+
+    // 获取最新的优化记录（数组最后一个元素）
+    const latestHistory = workspace.optimization_history[workspace.optimization_history.length - 1];
+
+    console.log('[Store] Restoring optimization history for', workspaceId, {
+      timestamp: latestHistory.timestamp,
+      hasAnalysisSteps: !!latestHistory.analysis_steps,
+      hasThoughts: !!latestHistory.thoughts,
+      stepsCount: latestHistory.analysis_steps?.length || 0,
+      thoughtsCount: latestHistory.thoughts?.length || 0
+    });
+
+    // 恢复优化状态到 store
+    set((state) => ({
+      optimizationStates: {
+        ...state.optimizationStates,
+        [workspaceId]: {
+          isActive: false,               // 历史记录已完成，不再active
+          currentStep: 'complete',       // 标记为已完成
+          intentReport: latestHistory.intent_report || null,
+          videoAnalysis: latestHistory.video_analysis || null,
+          finalResult: latestHistory.optimization_result || null,
+          progressMessages: [],          // 历史记录不需要进度消息
+          analysisSteps: latestHistory.analysis_steps || [],    // v2.0.1: 恢复分析步骤
+          thoughts: latestHistory.thoughts || [],                // v2.0.1: 恢复思考过程
+          error: null
+        }
+      }
+    }));
+
+    console.log('[Store] Optimization history restored successfully for', workspaceId);
   },
 
   /**

@@ -105,11 +105,35 @@ function validateIntentReport(report) {
 }
 
 /**
+ * 广播分析步骤 (内部helper函数)
+ * @param {string} workspaceId - Workspace ID
+ * @param {function} wsBroadcast - WebSocket广播函数
+ * @param {object} step - 步骤信息
+ */
+function broadcastStep(workspaceId, wsBroadcast, step) {
+  if (wsBroadcast) {
+    try {
+      wsBroadcast(workspaceId, {
+        type: 'agent_step',
+        agent: 'intent_analysis',
+        step: {
+          ...step,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      logger.warn('Failed to broadcast step', { error: error.message });
+    }
+  }
+}
+
+/**
  * 执行意图分析
  * @param {object} workspace - MongoDB workspace document
+ * @param {function} wsBroadcast - WebSocket广播函数 (可选)
  * @returns {Promise<object>} 意图报告
  */
-async function executeIntentAnalysis(workspace) {
+async function executeIntentAnalysis(workspace, wsBroadcast) {
   const workspaceId = workspace._id.toString();
 
   logger.info('Starting intent analysis', {
@@ -119,12 +143,51 @@ async function executeIntentAnalysis(workspace) {
   });
 
   try {
-    // 1. 构建 Prompt
+    // ===== Phase 1: 构建 Prompt =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'visual_analysis',
+      title: '视觉分析',
+      description: '正在分析图片内容：场景、主体、构图、情绪...',
+      status: 'running'
+    });
+
     const prompt = buildIntentAnalysisInput(workspace);
 
     logger.debug('Intent analysis prompt built', {
       promptLength: prompt.length,
       promptPreview: prompt.substring(0, 200)
+    });
+
+    // ===== Phase 2: 参数解读 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'parameter_interpretation',
+      title: '参数解读',
+      description: '分析用户选择的运镜、景别、光线等参数含义...',
+      status: 'running'
+    });
+
+    // ===== Phase 3: 运动意图推断 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'motion_inference',
+      title: '运动意图推断',
+      description: '推断用户期望的运动风格和节奏...',
+      status: 'running'
+    });
+
+    // ===== Phase 4: 情绪推断 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'mood_inference',
+      title: '情绪推断',
+      description: '分析用户所需的情感基调和氛围...',
+      status: 'running'
+    });
+
+    // ===== Phase 5: 矛盾检查 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'contradiction_check',
+      title: '矛盾检查',
+      description: '检查参数与图片内容的一致性...',
+      status: 'running'
     });
 
     // 2. 创建 Qwen 模型
@@ -139,7 +202,14 @@ async function executeIntentAnalysis(workspace) {
       temperature: 0.3
     });
 
-    // 3. 调用 LLM
+    // ===== Phase 6: LLM 推理 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'llm_inference',
+      title: 'LLM 推理',
+      description: '调用 Qwen 模型进行意图分析推理...',
+      status: 'running'
+    });
+
     const startTime = Date.now();
 
     logger.info('Calling Qwen LLM for intent analysis', { workspaceId });
@@ -160,7 +230,14 @@ async function executeIntentAnalysis(workspace) {
       content: response.content?.substring(0, 500)
     });
 
-    // 4. 解析结果
+    // ===== Phase 7: 解析结果 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'parse_result',
+      title: '解析结果',
+      description: '解析 LLM 返回的意图分析报告...',
+      status: 'running'
+    });
+
     const intentReport = parseIntentReport(response.content);
 
     if (!intentReport) {
@@ -181,6 +258,19 @@ async function executeIntentAnalysis(workspace) {
 
     // 5. 验证必要字段
     validateIntentReport(intentReport);
+
+    // ===== Phase 8: 完成 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'visual_analysis',
+      title: '视觉分析',
+      description: '图片分析完成',
+      status: 'completed',
+      result: {
+        scene: intentReport.user_intent?.scene_description,
+        mood: intentReport.user_intent?.desired_mood,
+        confidence: intentReport.confidence
+      }
+    });
 
     return intentReport;
 

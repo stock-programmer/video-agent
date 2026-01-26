@@ -124,21 +124,49 @@ function handleHumanConfirmation(workspaceId, confirmed) {
  * @param {object} intentReport - 意图分析报告
  * @param {object} videoAnalysis - 视频分析报告
  * @param {object} optimizationResult - 优化结果
+ * @param {array} analysisSteps - 分析步骤列表 (v2.0.1)
+ * @param {array} thoughts - AI思考过程列表 (v2.0.1)
  * @returns {Promise<object>} 保存的记录
  */
 async function saveOptimizationResult(
   workspaceId,
   intentReport,
   videoAnalysis,
-  optimizationResult
+  optimizationResult,
+  analysisSteps = [],
+  thoughts = []
 ) {
-  logger.info('Saving optimization result to database', { workspaceId });
+  logger.info('Saving optimization result to database', {
+    workspaceId,
+    analysisStepsCount: analysisSteps.length,
+    thoughtsCount: thoughts.length,
+    hasIntentReport: !!intentReport,
+    hasVideoAnalysis: !!videoAnalysis,
+    hasOptimizationResult: !!optimizationResult
+  });
+
+  // 详细记录分析步骤内容
+  if (analysisSteps.length > 0) {
+    logger.debug('Analysis steps to be saved:', {
+      workspaceId,
+      steps: analysisSteps.map(s => ({
+        agent: s.agent,
+        phase: s.phase,
+        title: s.title,
+        status: s.status
+      }))
+    });
+  } else {
+    logger.warn('No analysis steps collected!', { workspaceId });
+  }
 
   const optimizationRecord = {
     timestamp: new Date(),
     intent_report: intentReport,
     video_analysis: videoAnalysis,
-    optimization_result: optimizationResult
+    optimization_result: optimizationResult,
+    analysis_steps: analysisSteps,     // v2.0.1: 保存详细步骤
+    thoughts: thoughts                  // v2.0.1: 保存思考过程
   };
 
   const workspace = await Workspace.findByIdAndUpdate(
@@ -157,7 +185,9 @@ async function saveOptimizationResult(
 
   logger.info('Optimization result saved successfully', {
     workspaceId,
-    historyLength: workspace.optimization_history?.length || 0
+    historyLength: workspace.optimization_history?.length || 0,
+    analysisStepsCount: analysisSteps.length,
+    thoughtsCount: thoughts.length
   });
 
   return optimizationRecord;
@@ -178,6 +208,38 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
 
   const startTime = Date.now();
 
+  // v2.0.1: 创建收集器来保存所有分析步骤和思考
+  const analysisSteps = [];
+  const thoughts = [];
+
+  // 包装 wsBroadcast 函数来收集消息
+  const collectingWsBroadcast = (wsWorkspaceId, message) => {
+    // 收集分析步骤
+    if (message.type === 'agent_step' && message.step) {
+      analysisSteps.push({
+        agent: message.agent,
+        phase: message.step.phase,
+        title: message.step.title,
+        description: message.step.description,
+        status: message.step.status,
+        result: message.step.result,
+        timestamp: message.step.timestamp || new Date()
+      });
+    }
+
+    // 收集思考过程
+    if (message.type === 'agent_thought' && message.thought) {
+      thoughts.push({
+        agent: message.agent,
+        thought: message.thought,
+        timestamp: message.timestamp || new Date()
+      });
+    }
+
+    // 调用原始的 wsBroadcast 发送给前端
+    wsBroadcast(wsWorkspaceId, message);
+  };
+
   try {
     // 1. 获取 workspace
     const workspace = await Workspace.findById(workspaceId);
@@ -191,26 +253,26 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     // ==================== Phase 1: Intent Analysis ====================
     logger.info('Phase 1: Intent Analysis started', { workspaceId });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'agent_start',
       agent: 'intent_analysis',
       message: '开始分析用户意图...'
     });
 
-    const intentReport = await executeIntentAnalysis(workspace);
+    const intentReport = await executeIntentAnalysis(workspace, collectingWsBroadcast);
 
     logger.info('Intent analysis completed', {
       workspaceId,
       confidence: intentReport.confidence
     });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'agent_complete',
       agent: 'intent_analysis',
       message: '用户意图分析完成'
     });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'intent_report',
       data: intentReport
     });
@@ -218,7 +280,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     // ==================== Phase 2: Human-in-the-Loop ====================
     logger.info('Phase 2: Waiting for human confirmation', { workspaceId });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'human_loop_pending',
       message: '请确认意图分析是否正确'
     });
@@ -238,7 +300,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
       logger.info('Intent-only mode: skipping video analysis', { workspaceId });
 
       // 推送意图分析完成消息
-      wsBroadcast(workspaceId, {
+      collectingWsBroadcast(workspaceId, {
         type: 'optimization_complete',
         mode: 'intent_only',
         message: '意图分析已完成，请生成视频后可进行完整优化'
@@ -261,7 +323,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     // ==================== Phase 3: Video Analysis ====================
     logger.info('Phase 3: Video Analysis started', { workspaceId });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'agent_start',
       agent: 'video_analysis',
       message: '开始分析视频质量...'
@@ -270,7 +332,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     // 刷新 workspace (可能有视频 URL 更新)
     const refreshedWorkspace = await Workspace.findById(workspaceId);
 
-    const videoAnalysis = await executeVideoAnalysis(refreshedWorkspace, intentReport);
+    const videoAnalysis = await executeVideoAnalysis(refreshedWorkspace, intentReport, collectingWsBroadcast);
 
     logger.info('Video analysis completed', {
       workspaceId,
@@ -278,13 +340,13 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
       issueCount: videoAnalysis.issues?.length || 0
     });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'agent_complete',
       agent: 'video_analysis',
       message: '视频质量分析完成'
     });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'video_analysis',
       data: videoAnalysis
     });
@@ -292,7 +354,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     // ==================== Phase 4: Master Agent Decision ====================
     logger.info('Phase 4: Master Agent decision started', { workspaceId });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'agent_start',
       agent: 'master_agent',
       message: '正在生成优化建议...'
@@ -301,7 +363,8 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     const optimizationResult = await executeMasterAgentDecision(
       refreshedWorkspace,
       intentReport,
-      videoAnalysis
+      videoAnalysis,
+      collectingWsBroadcast
     );
 
     logger.info('Master Agent decision completed', {
@@ -310,7 +373,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
       confidence: optimizationResult.confidence
     });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'agent_complete',
       agent: 'master_agent',
       message: '优化建议生成完成'
@@ -323,7 +386,9 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
       workspaceId,
       intentReport,
       videoAnalysis,
-      optimizationResult
+      optimizationResult,
+      analysisSteps,  // v2.0.1: 保存分析步骤
+      thoughts        // v2.0.1: 保存思考过程
     );
 
     logger.info('Optimization result saved', {
@@ -332,7 +397,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
     });
 
     // 推送最终结果
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'optimization_result',
       data: {
         ng_reasons: optimizationResult.ng_reasons,
@@ -366,7 +431,7 @@ async function optimizePrompt(workspaceId, wsBroadcast, options = {}) {
       totalDuration
     });
 
-    wsBroadcast(workspaceId, {
+    collectingWsBroadcast(workspaceId, {
       type: 'optimization_error',
       error: error.message
     });

@@ -13,6 +13,8 @@ export interface Workspace {
   updatedAt?: string;
   // v2.0: 优化应用时间戳 - 用于触发VideoForm更新
   optimization_applied_at?: number;
+  // v2.0.1: 优化历史记录
+  optimization_history?: OptimizationHistoryEntry[];
 }
 
 export interface VideoFormData {
@@ -420,7 +422,48 @@ export interface OptimizationState {
   videoAnalysis: VideoAnalysis | null;
   finalResult: OptimizationResult | null;
   progressMessages: ProgressMessage[];
+
+  // v2.0.1: 新增详细分析步骤
+  analysisSteps: AnalysisStep[];       // 详细的分析步骤列表
+  thoughts: ThoughtMessage[];          // AI思考过程
+
   error: string | null;
+}
+
+/**
+ * v2.0.1: 分析步骤
+ */
+export interface AnalysisStep {
+  agent: string;                      // agent名称：intent_analysis, video_analysis, master
+  phase: string;                      // 步骤阶段：visual_analysis, llm_inference等
+  title: string;                      // 步骤标题（中文展示）
+  description: string;                // 步骤详细说明
+  status: 'running' | 'completed';    // 步骤状态
+  result?: any;                       // 步骤结果（可选，完成时提供）
+  timestamp: string;                  // 时间戳
+}
+
+/**
+ * v2.0.1: AI思考消息
+ */
+export interface ThoughtMessage {
+  agent: string;                      // agent名称
+  thought: string;                    // 思考内容
+  timestamp: string;                  // 时间戳
+}
+
+/**
+ * v2.0.1: 优化历史记录条目（MongoDB数据结构）
+ */
+export interface OptimizationHistoryEntry {
+  timestamp: string;                  // 优化时间戳
+  intent_report: IntentReport;        // 意图分析报告
+  video_analysis?: VideoAnalysis;     // 视频分析报告（intent_only模式无此字段）
+  optimization_result?: OptimizationResult; // 优化结果（intent_only模式无此字段）
+  analysis_steps?: AnalysisStep[];    // 分析步骤列表
+  thoughts?: ThoughtMessage[];        // AI思考过程列表
+  user_action?: 'applied' | 'rejected' | 'modified' | 'pending'; // 用户操作
+  applied_at?: string;                // 应用时间
 }
 
 /**

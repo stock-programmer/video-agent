@@ -127,13 +127,58 @@ function buildMasterAgentInput(workspace, intentReport, videoAnalysis) {
 }
 
 /**
+ * 广播分析步骤 (内部helper函数)
+ * @param {string} workspaceId - Workspace ID
+ * @param {function} wsBroadcast - WebSocket广播函数
+ * @param {object} step - 步骤信息
+ */
+function broadcastStep(workspaceId, wsBroadcast, step) {
+  if (wsBroadcast) {
+    try {
+      wsBroadcast(workspaceId, {
+        type: 'agent_step',
+        agent: 'master',
+        step: {
+          ...step,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      logger.warn('Failed to broadcast step', { error: error.message });
+    }
+  }
+}
+
+/**
+ * 广播AI思考过程 (内部helper函数)
+ * @param {string} workspaceId - Workspace ID
+ * @param {function} wsBroadcast - WebSocket广播函数
+ * @param {string} thought - 思考内容
+ */
+function broadcastThought(workspaceId, wsBroadcast, thought) {
+  if (wsBroadcast) {
+    try {
+      wsBroadcast(workspaceId, {
+        type: 'agent_thought',
+        agent: 'master',
+        thought,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.warn('Failed to broadcast thought', { error: error.message });
+    }
+  }
+}
+
+/**
  * 执行 Master Agent 决策
  * @param {object} workspace - MongoDB workspace document
  * @param {object} intentReport - 意图报告
  * @param {object} videoAnalysis - 视频分析报告
+ * @param {function} wsBroadcast - WebSocket广播函数 (可选)
  * @returns {Promise<object>} 优化结果
  */
-async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis) {
+async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis, wsBroadcast) {
   const workspaceId = workspace._id.toString();
 
   logger.info('Starting Master Agent decision', {
@@ -144,7 +189,15 @@ async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis
   });
 
   try {
-    // 1. 构建决策 Prompt
+    // ===== Phase 1: 数据整合 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'data_integration',
+      title: '数据整合',
+      description: '整合意图分析和视频分析的结果...',
+      status: 'running'
+    });
+
+    // 构建决策 Prompt
     const prompt = buildMasterAgentInput(workspace, intentReport, videoAnalysis);
 
     logger.debug('Master Agent prompt built', {
@@ -152,7 +205,34 @@ async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis
       promptPreview: prompt.substring(0, 300)
     });
 
-    // 2. 创建 Qwen 模型
+    // ===== Phase 2: 策略决策 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'strategy_decision',
+      title: '策略决策',
+      description: '分析意图与视频的不匹配，制定优化策略...',
+      status: 'running'
+    });
+
+    // 添加思考过程
+    if (videoAnalysis.issues && videoAnalysis.issues.length > 0) {
+      const highSeverityIssues = videoAnalysis.issues
+        .filter(i => i.severity === 'high')
+        .map(i => i.category)
+        .join(', ');
+      broadcastThought(
+        workspaceId,
+        wsBroadcast,
+        `检测到${videoAnalysis.issues.length}个问题，其中高严重性问题包括：${highSeverityIssues}`
+      );
+    } else {
+      broadcastThought(
+        workspaceId,
+        wsBroadcast,
+        '视频质量较好，内容匹配度：' + (videoAnalysis.content_match_score * 100).toFixed(0) + '%'
+      );
+    }
+
+    // 创建 Qwen 模型
     const qwenModel = new QwenWithTools({
       model: 'qwen-plus',
       temperature: 0.2, // Lower temperature for more consistent decisions
@@ -164,7 +244,14 @@ async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis
       temperature: 0.2
     });
 
-    // 3. 调用 LLM
+    // ===== Phase 3: 参数优化 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'parameter_optimization',
+      title: '参数优化',
+      description: '生成具体的参数优化建议...',
+      status: 'running'
+    });
+
     const startTime = Date.now();
 
     logger.info('Calling Qwen LLM for Master Agent decision', { workspaceId });
@@ -185,7 +272,7 @@ async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis
       content: response.content?.substring(0, 500)
     });
 
-    // 4. 解析结果
+    // 解析结果
     const optimizationResult = parseOptimizationResult(response.content);
 
     if (!optimizationResult) {
@@ -200,7 +287,25 @@ async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis
       duration
     });
 
-    // 5. 记录决策详情
+    // 添加思考过程：参数变更摘要
+    if (optimizationResult.changes && optimizationResult.changes.length > 0) {
+      const changedFields = optimizationResult.changes.map(c => c.field).join(', ');
+      broadcastThought(
+        workspaceId,
+        wsBroadcast,
+        `提出${optimizationResult.changes.length}个参数变更：${changedFields}`
+      );
+    }
+
+    // ===== Phase 4: 置信度评估 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'confidence_evaluation',
+      title: '置信度评估',
+      description: '评估优化建议的可靠性...',
+      status: 'running'
+    });
+
+    // 记录决策详情
     if (optimizationResult.ng_reasons && optimizationResult.ng_reasons.length > 0) {
       logger.info('NG reasons identified', {
         workspaceId,
@@ -224,8 +329,28 @@ async function executeMasterAgentDecision(workspace, intentReport, videoAnalysis
       });
     }
 
-    // 6. 验证优化结果
+    // 验证优化结果
     validateOptimizationResult(optimizationResult, workspace.form_data);
+
+    // ===== Phase 5: 生成结果 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'generate_result',
+      title: '生成结果',
+      description: '最终优化方案已生成',
+      status: 'completed',
+      result: {
+        ngReasonCount: optimizationResult.ng_reasons?.length || 0,
+        changeCount: optimizationResult.changes?.length || 0,
+        confidence: optimizationResult.confidence
+      }
+    });
+
+    // 最终思考：置信度总结
+    broadcastThought(
+      workspaceId,
+      wsBroadcast,
+      `优化方案置信度：${(optimizationResult.confidence * 100).toFixed(0)}%`
+    );
 
     return optimizationResult;
 

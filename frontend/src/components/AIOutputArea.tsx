@@ -4,7 +4,7 @@
  * AI 输出区域 - 集成优化流程的所有UI组件
  *
  * 功能：
- * - 显示 Agent 执行进度（AgentProgress）
+ * - v2.0.1: 显示详细的分析过程（AnalysisProgressPanel）
  * - 自动弹出意图确认弹窗（IntentReportModal）
  * - 显示最终优化结果（OptimizationResult）
  * - 显示错误信息
@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWorkspaceStore } from '../stores/workspaceStore';
-import { AgentProgress } from './AgentProgress';
+import { AnalysisProgressPanel } from './AnalysisProgressPanel';
 import { IntentReportModal } from './IntentReportModal';
 import { OptimizationResult } from './OptimizationResult';
 
@@ -52,13 +52,13 @@ export const AIOutputArea: React.FC<AIOutputAreaProps> = ({ workspaceId }) => {
   }
 
   return (
-    <div className="ai-output-area mt-4 max-h-[600px] overflow-y-auto">
-      {/* Agent 进度展示 */}
-      {(optimizationState.progressMessages.length > 0 || optimizationState.isActive) && (
-        <AgentProgress
-          messages={optimizationState.progressMessages}
-          isActive={optimizationState.isActive}
-        />
+    <div className="ai-output-area space-y-4">
+      {/* v2.0.1: 详细的分析过程展示 - 固定高度的内部滚动区域 */}
+      {/* 只要有分析步骤数据就显示，不管是否正在运行 */}
+      {(optimizationState.analysisSteps && optimizationState.analysisSteps.length > 0) && (
+        <div className="analysis-section max-h-[300px] overflow-y-auto border border-slate-700/50 rounded-lg bg-slate-900/30 p-4">
+          <AnalysisProgressPanel workspaceId={workspaceId} />
+        </div>
       )}
 
       {/* 意图确认弹窗 */}
@@ -71,7 +71,7 @@ export const AIOutputArea: React.FC<AIOutputAreaProps> = ({ workspaceId }) => {
         />
       )}
 
-      {/* 优化结果 */}
+      {/* 优化结果 - 直接在外层滚动中展示，无独立滚动条 */}
       {optimizationState.finalResult && (
         <OptimizationResult
           workspaceId={workspaceId}

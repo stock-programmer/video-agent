@@ -184,7 +184,7 @@ export const OptimizeButton: React.FC<OptimizeButtonProps> = ({
         </div>
       )}
 
-      {disabled && !isLoading && (
+      {disabled && !isLoading && !isOptimizing && getDisabledReason() && (
         <div className="mt-2 text-gray-600 text-sm text-center bg-gray-50 rounded-lg py-2 px-3">
           💡 {getDisabledReason()}
         </div>

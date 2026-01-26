@@ -165,12 +165,36 @@ function validateVideoAnalysisReport(report) {
 }
 
 /**
+ * 广播分析步骤 (内部helper函数)
+ * @param {string} workspaceId - Workspace ID
+ * @param {function} wsBroadcast - WebSocket广播函数
+ * @param {object} step - 步骤信息
+ */
+function broadcastStep(workspaceId, wsBroadcast, step) {
+  if (wsBroadcast) {
+    try {
+      wsBroadcast(workspaceId, {
+        type: 'agent_step',
+        agent: 'video_analysis',
+        step: {
+          ...step,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      logger.warn('Failed to broadcast step', { error: error.message });
+    }
+  }
+}
+
+/**
  * 执行视频分析
  * @param {object} workspace - MongoDB workspace document
  * @param {object} intentReport - 意图报告
+ * @param {function} wsBroadcast - WebSocket广播函数 (可选)
  * @returns {Promise<object>} 视频分析报告
  */
-async function executeVideoAnalysis(workspace, intentReport) {
+async function executeVideoAnalysis(workspace, intentReport, wsBroadcast) {
   const workspaceId = workspace._id.toString();
 
   // 优先使用 remote_url (Qwen-hosted URL)，如果不存在则使用 url
@@ -201,12 +225,52 @@ async function executeVideoAnalysis(workspace, intentReport) {
   }
 
   try {
+    // ===== Phase 1: 获取视频 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'fetch_video',
+      title: '获取视频',
+      description: '正在加载视频文件进行分析...',
+      status: 'running'
+    });
+
+    // ===== Phase 2: 质量评估 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'quality_assessment',
+      title: '质量评估',
+      description: '评估视频的分辨率、清晰度、流畅度...',
+      status: 'running'
+    });
+
+    // ===== Phase 3: 内容匹配 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'content_matching',
+      title: '内容匹配',
+      description: '检查视频内容与用户意图的匹配度...',
+      status: 'running'
+    });
+
+    // ===== Phase 4: 运动分析 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'motion_analysis',
+      title: '运动分析',
+      description: '分析视频中的运动效果和镜头运动...',
+      status: 'running'
+    });
+
     // 1. 构建分析 Prompt
     const analysisPrompt = buildVideoAnalysisInput(workspace, intentReport);
 
     logger.debug('Video analysis prompt built', {
       promptLength: analysisPrompt.length,
       promptPreview: analysisPrompt.substring(0, 200)
+    });
+
+    // ===== Phase 5: 问题诊断 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'problem_diagnosis',
+      title: '问题诊断',
+      description: '调用AI模型诊断视频存在的问题...',
+      status: 'running'
     });
 
     // 2. 调用 Qwen VL 服务
@@ -253,6 +317,14 @@ async function executeVideoAnalysis(workspace, intentReport) {
     // 4. 验证报告结构
     validateVideoAnalysisReport(analysisReport);
 
+    // ===== Phase 6: NG原因总结 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'ng_summary',
+      title: 'NG原因总结',
+      description: '总结视频不符合预期的原因...',
+      status: 'running'
+    });
+
     // 5. 记录关键发现
     if (analysisReport.issues && analysisReport.issues.length > 0) {
       logger.info('Video quality issues identified', {
@@ -273,6 +345,19 @@ async function executeVideoAnalysis(workspace, intentReport) {
     } else {
       logger.info('No significant video quality issues found', { workspaceId });
     }
+
+    // ===== Phase 7: 完成 =====
+    broadcastStep(workspaceId, wsBroadcast, {
+      phase: 'content_matching',
+      title: '内容匹配',
+      description: '分析完成',
+      status: 'completed',
+      result: {
+        contentMatchScore: analysisReport.content_match_score,
+        issueCount: analysisReport.issues?.length || 0,
+        strengthCount: analysisReport.strengths?.length || 0
+      }
+    });
 
     return analysisReport;
 

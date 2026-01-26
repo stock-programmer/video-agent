@@ -93,8 +93,8 @@ export function AICollaboration({ workspaceId }: Props) {
             onChange={e => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="例如：我想要一个温馨的家庭场景，人物从左侧走向右侧..."
-            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={3}
+            className="w-full border border-gray-300 rounded-lg p-4 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y min-h-[120px]"
+            rows={6}
             disabled={loading}
           />
           <p className="text-xs text-gray-500 mt-1">提示: Ctrl+Enter 快速提交</p>
@@ -104,11 +104,11 @@ export function AICollaboration({ workspaceId }: Props) {
         <button
           onClick={handleSubmit}
           disabled={loading || !input.trim()}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-base"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               AI 思考中...
             </span>
           ) : (

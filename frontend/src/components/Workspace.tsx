@@ -8,6 +8,7 @@ import { useWorkspaceStore } from '../stores/workspaceStore';
 import { OptimizeButton } from './OptimizeButton';
 import { AIOutputArea } from './AIOutputArea';
 
+import { useRef } from 'react';
 import { Trash2, RotateCcw, X, Image as ImageIcon, MessageSquare, Sparkles, Play } from 'lucide-react';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 
 export function Workspace({ workspace, isDeleted = false }: Props) {
   const { softDeleteWorkspace, restoreWorkspace, hardDeleteWorkspace } = useWorkspaceStore();
+  const videoPreviewRef = useRef<HTMLDivElement>(null);
 
   const handleSoftDelete = () => {
     softDeleteWorkspace(workspace._id);
@@ -29,6 +31,23 @@ export function Workspace({ workspace, isDeleted = false }: Props) {
   const handleHardDelete = () => {
     if (confirm('确定要永久删除这个工作空间吗？此操作不可恢复，将删除所有相关文件。')) {
       hardDeleteWorkspace(workspace._id);
+    }
+  };
+
+  // 滚动到视频预览区域
+  const scrollToVideoPreview = () => {
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'start'
+      });
+
+      // 添加一个短暂的高亮效果，让用户注意到跳转
+      videoPreviewRef.current.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+      setTimeout(() => {
+        videoPreviewRef.current?.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
+      }, 2000);
     }
   };
 
@@ -89,14 +108,19 @@ export function Workspace({ workspace, isDeleted = false }: Props) {
 
             {/* Video Form */}
             <div>
-              <VideoForm workspaceId={workspace._id} formData={workspace.form_data} optimizationAppliedAt={workspace.optimization_applied_at} />
+              <VideoForm
+                workspaceId={workspace._id}
+                formData={workspace.form_data}
+                optimizationAppliedAt={workspace.optimization_applied_at}
+                onGenerateVideo={scrollToVideoPreview}
+              />
             </div>
           </div>
 
           {/* Right Column: Video Preview + AI Optimize + AI Collaboration */}
           <div className="flex flex-col gap-6 sm:gap-8">
             {/* Video Preview */}
-            <div>
+            <div ref={videoPreviewRef} className="transition-all duration-300 rounded-xl">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-blue-500/20 rounded-lg">
                   <Play className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
@@ -120,7 +144,7 @@ export function Workspace({ workspace, isDeleted = false }: Props) {
               <div className="mb-4">
                 <OptimizeButton workspaceId={workspace._id} videoStatus={workspace.video?.status || 'pending'} videoUrl={workspace.video?.url} formData={workspace.form_data} />
               </div>
-              <div className="border border-slate-800/50 rounded-xl bg-gradient-to-br from-slate-900/50 to-violet-900/30 p-4 overflow-y-auto max-h-[350px] shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="border border-slate-800/50 rounded-xl bg-gradient-to-br from-slate-900/50 to-violet-900/30 p-4 overflow-y-auto max-h-[500px] shadow-sm hover:shadow-md transition-shadow duration-300">
                 <AIOutputArea workspaceId={workspace._id} />
               </div>
             </div>

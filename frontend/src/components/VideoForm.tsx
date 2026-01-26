@@ -30,9 +30,10 @@ interface Props {
   workspaceId: string;
   formData: VideoFormData;
   optimizationAppliedAt?: number;  // v2.0: 优化应用时间戳
+  onGenerateVideo?: () => void;     // 视频生成后的回调
 }
 
-export function VideoForm({ workspaceId, formData: initialFormData, optimizationAppliedAt }: Props) {
+export function VideoForm({ workspaceId, formData: initialFormData, optimizationAppliedAt, onGenerateVideo }: Props) {
   // Initialize form state with v1.1 defaults
   const [formData, setFormData] = useState<VideoFormData>({
     // v1.0 fields
@@ -148,6 +149,11 @@ export function VideoForm({ workspaceId, formData: initialFormData, optimization
     // Submit to backend
     try {
       await api.generateVideo(workspaceId, formData);
+
+      // 视频生成请求成功，滚动到视频预览区域
+      if (onGenerateVideo) {
+        onGenerateVideo();
+      }
     } catch (error) {
       console.error('Failed to generate video:', error);
       alert('视频生成失败，请稍后重试');
