@@ -2,28 +2,17 @@ import multer from 'multer';
 import path from 'path';
 import config from '../config.js';
 import logger from '../utils/logger.js';
+import { uploadImage as uploadImageToOSS } from '../utils/oss.js';
 
 // ============================================================
 // Multer Storage Configuration
 // ============================================================
 
 /**
- * Configure multer disk storage
- * Files are saved to the uploads directory with unique names
+ * 使用 memoryStorage 将文件保存到内存
+ * 之后上传到阿里云 OSS，不再写入本地磁盘
  */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, config.upload.dir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-random-extension
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).slice(2, 10);
-    const ext = path.extname(file.originalname);
-    const uniqueName = `${timestamp}-${randomString}${ext}`;
-    cb(null, uniqueName);
-  },
-});
+const storage = multer.memoryStorage();
 
 // ============================================================
 // File Filter (Validation)
@@ -79,7 +68,7 @@ export const uploadImage = upload.single('image');
 
 /**
  * Handle image upload response
- * Returns file path and public URL
+ * 上传到阿里云 OSS，返回 OSS 公开 URL
  */
 export async function handleUpload(req, res) {
   try {
@@ -91,22 +80,28 @@ export async function handleUpload(req, res) {
       });
     }
 
-    // Construct public URL for the uploaded image
-    // Use relative path instead of full URL to work with Vite proxy
-    const filename = req.file.filename;
-    const imageUrl = `/uploads/${filename}`;
+    // 生成唯一文件名: timestamp-random-extension
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).slice(2, 10);
+    const ext = path.extname(req.file.originalname);
+    const filename = `${timestamp}-${randomString}${ext}`;
+
+    logger.info(`图片上传中: filename=${filename}, size=${req.file.size} bytes, mimetype=${req.file.mimetype}`);
+
+    // 上传到 OSS
+    const imageUrl = await uploadImageToOSS(req.file.buffer, filename, req.file.mimetype);
 
     // Response data
     const result = {
       success: true,
-      image_path: req.file.path, // Local file path
-      image_url: imageUrl, // Public URL (relative path)
+      image_path: filename,          // 仅存储文件名，不再是本地路径
+      image_url: imageUrl,           // OSS 公开 URL (前端和 Qwen API 均可访问)
       filename: filename,
       size: req.file.size,
       mimetype: req.file.mimetype,
     };
 
-    logger.info(`Image uploaded successfully: ${filename} (${req.file.size} bytes)`);
+    logger.info(`图片上传到 OSS 成功: filename=${filename}, url=${imageUrl}`);
 
     res.status(200).json(result);
   } catch (error) {

@@ -49,9 +49,9 @@ const workspaceSchema = new mongoose.Schema({
       default: 'pending'
     },
     task_id: String,
-    url: String,          // 本地访问URL (e.g., /uploads/videos/xxx.mp4)
-    remote_url: String,   // 原始远程URL (备用)
-    path: String,         // 本地文件系统路径
+    url: String,          // 阿里云 OSS 公开 URL (e.g., https://bucket.oss-region.aliyuncs.com/uploads/videos/xxx.mp4)
+    remote_url: String,   // 原始远程 URL (Qwen CDN URL, 备用)
+    path: String,         // 文件名 (e.g., workspace_id_timestamp.mp4)
     error: String
   },
   ai_collaboration: [{

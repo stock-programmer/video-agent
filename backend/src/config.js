@@ -92,6 +92,20 @@ const config = {
     heartbeatTimeout: parseInt(process.env.WS_HEARTBEAT_TIMEOUT, 10) || 60000, // 60 seconds
   },
 
+  // Alibaba Cloud OSS configuration
+  oss: {
+    region: process.env.OSS_REGION || 'oss-cn-hangzhou',
+    accessKeyId: process.env.OSS_ACCESS_KEY_ID || '',
+    accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET || '',
+    bucket: process.env.OSS_BUCKET || 'image-to-video-333',
+    // Object path prefixes
+    imagePath: process.env.OSS_IMAGE_PATH || 'uploads/images/',
+    videoPath: process.env.OSS_VIDEO_PATH || 'uploads/videos/',
+    // 签名URL配置（用于私有bucket访问）
+    signedUrlExpiry: parseInt(process.env.OSS_SIGNED_URL_EXPIRY, 10) || 3600, // 默认1小时(秒)
+    usePrivateBucket: process.env.OSS_USE_PRIVATE_BUCKET === 'true', // 是否使用私有bucket
+  },
+
   // Third-party API keys
   apiKeys: {
     // Video generation services

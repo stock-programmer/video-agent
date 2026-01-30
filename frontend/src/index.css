@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "./styles/design-tokens.css";
 
+/* Import Noto Sans SC for Chinese */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
 /* Global styles */
 * {
   box-sizing: border-box;
@@ -8,7 +11,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Noto Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

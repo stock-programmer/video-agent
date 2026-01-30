@@ -19,36 +19,36 @@ import { AgentExecutionError, ValidationError } from '../../utils/error-types.js
 /**
  * Video Analysis Prompt Template
  */
-const VIDEO_ANALYSIS_PROMPT = `You are a Video Quality Analysis Specialist.
+const VIDEO_ANALYSIS_PROMPT = `你是视频质量分析专家。
 
-Task: Analyze the generated video and compare it against the user's original intent.
+任务：分析生成的视频，并将其与用户的原始意图进行比较。
 
-USER'S ORIGINAL INTENT:
+用户的原始意图：
 {USER_INTENT}
 
-GENERATION PARAMETERS USED:
+使用的生成参数：
 {GENERATION_PARAMS}
 
-Your Analysis Steps:
-1. **Content Match Check**: Does the video content match the intended scene?
-2. **Motion Quality**: Is the motion smooth, natural, and matches expected intensity?
-3. **Technical Quality**: Check resolution, clarity, fluency, artifacts
-4. **Parameter Alignment**: Do visual elements align with chosen parameters?
-5. **Issue Identification**: Identify specific problems (category + severity)
+分析步骤：
+1. **内容匹配检查**：视频内容是否与预期场景匹配？
+2. **运动质量**：运动是否流畅、自然，是否与预期强度匹配？
+3. **技术质量**：检查分辨率、清晰度、流畅度、瑕疵
+4. **参数对齐**：视觉元素是否与所选参数对齐？
+5. **问题识别**：识别具体问题（类别 + 严重程度）
 
-Output JSON (wrap in <VIDEO_ANALYSIS>...</VIDEO_ANALYSIS>):
+输出 JSON（用 <VIDEO_ANALYSIS>...</VIDEO_ANALYSIS> 包裹）：
 {
   "content_match_score": 0.75,
   "issues": [
     {
-      "category": "motion_quality",
-      "description": "Motion is too fast and jerky, doesn't match 'slowly walking' prompt",
+      "category": "运动质量",
+      "description": "运动速度过快且不平稳，与'缓慢行走'的提示词不匹配",
       "severity": "high",
       "affected_parameter": "motion_intensity"
     },
     {
-      "category": "lighting",
-      "description": "Video appears darker than expected for outdoor scene",
+      "category": "光线",
+      "description": "视频看起来比户外场景预期的要暗",
       "severity": "medium",
       "affected_parameter": "lighting"
     }
@@ -57,20 +57,21 @@ Output JSON (wrap in <VIDEO_ANALYSIS>...</VIDEO_ANALYSIS>):
     "resolution": "1280x720",
     "clarity_score": 0.85,
     "fluency_score": 0.70,
-    "artifacts": "Minor compression artifacts in fast-moving areas"
+    "artifacts": "快速移动区域有轻微压缩瑕疵"
   },
   "strengths": [
-    "Camera movement is smooth and professional",
-    "Subject is clearly visible throughout"
+    "镜头运动流畅且专业",
+    "主体在整个视频中清晰可见"
   ],
-  "overall_assessment": "Video has good technical quality but motion speed doesn't match user's 'slowly' intention. Recommend reducing motion_intensity from 3 to 2."
+  "overall_assessment": "视频技术质量良好，但运动速度与用户的'缓慢'意图不符。建议将 motion_intensity 从 3 降低到 2。"
 }
 
-Important:
-- content_match_score: 0-1 (how well video matches intent)
-- issues: Array of specific problems with severity (high/medium/low)
-- Be specific about which parameters need adjustment
-- Focus on actionable feedback
+重要提示：
+- content_match_score: 0-1（视频与意图的匹配程度）
+- issues: 具体问题的数组，包含严重程度（high/medium/low）
+- 明确指出哪些参数需要调整
+- 专注于可操作的反馈
+- 所有输出内容必须使用中文
 `;
 
 /**
@@ -84,22 +85,22 @@ function buildVideoAnalysisInput(workspace, intentReport) {
 
   // 格式化用户意图
   const userIntent = `
-Scene: ${intentReport.user_intent.scene_description}
-Desired Mood: ${intentReport.user_intent.desired_mood}
-Key Elements: ${intentReport.user_intent.key_elements.join(', ')}
-Expected Motion: ${intentReport.user_intent.motion_expectation}
-Energy Level: ${intentReport.user_intent.energy_level || 'not specified'}
+场景: ${intentReport.user_intent.scene_description}
+期望氛围: ${intentReport.user_intent.desired_mood}
+关键元素: ${intentReport.user_intent.key_elements.join('、')}
+预期运动: ${intentReport.user_intent.motion_expectation}
+能量级别: ${intentReport.user_intent.energy_level || '未指定'}
 `;
 
   // 格式化生成参数
   const genParams = `
-Camera Movement: ${form_data.camera_movement || 'N/A'}
-Shot Type: ${form_data.shot_type || 'N/A'}
-Lighting: ${form_data.lighting || 'N/A'}
-Motion Prompt: "${form_data.motion_prompt || 'N/A'}"
-Motion Intensity: ${form_data.motion_intensity || 3}
-Duration: ${form_data.duration || 5}s
-Quality: ${form_data.quality_preset || 'standard'}
+运镜方式: ${form_data.camera_movement || '未指定'}
+景别: ${form_data.shot_type || '未指定'}
+光线: ${form_data.lighting || '未指定'}
+运动描述: "${form_data.motion_prompt || '未指定'}"
+运动强度: ${form_data.motion_intensity || 3}
+视频时长: ${form_data.duration || 5}秒
+视频质量: ${form_data.quality_preset || 'standard'}
 `;
 
   return VIDEO_ANALYSIS_PROMPT

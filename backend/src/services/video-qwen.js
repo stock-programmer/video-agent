@@ -1,11 +1,9 @@
 import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
-import { pipeline } from 'stream/promises';
 import config from '../config.js';
 import logger from '../utils/logger.js';
 import { Workspace } from '../db/mongodb.js';
 import { broadcast } from '../websocket/server.js';
+import { uploadVideo, getAccessUrl } from '../utils/oss.js';
 
 const API_BASE = 'https://dashscope.aliyuncs.com/api/v1';
 
@@ -67,6 +65,16 @@ export async function generate(workspaceId, formData) {
       throw new Error('请先上传图片后再生成视频');
     }
 
+    // 如果使用私有bucket,需要重新生成签名URL供Qwen API访问
+    // 签名URL会过期,数据库中保存的URL可能已失效
+    let imageUrlForQwen = workspace.image_url;
+    if (config.oss.usePrivateBucket && workspace.image_path) {
+      const objectName = config.oss.imagePath + workspace.image_path;
+      // 为Qwen API生成24小时有效期的签名URL(视频生成通常在几分钟内完成)
+      imageUrlForQwen = await getAccessUrl(objectName, 86400); // 24小时
+      logger.info(`为Qwen API重新生成签名URL: expires=24h, url=${imageUrlForQwen}`);
+    }
+
     logger.info(`开始生成视频: workspace=${workspaceId}`);
 
     // ===== v1.1: 提取新参数（带默认值） =====
@@ -91,11 +99,7 @@ export async function generate(workspaceId, formData) {
       model: config.qwen.videoModel || 'wan2.6-i2v',
       input: {
         prompt: enhancedPrompt,
-        //img_url: workspace.image_url
-        img_url: 'https://s41.ax1x.com/2026/01/23/pZgyHa9.jpg'
-        //img_url: 'https://image-to-video-333.oss-cn-beijing.aliyuncs.com/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260123201520.jpg?Expires=1769173578&OSSAccessKeyId=TMP.3KoC1mE5EgHRxWtjMuMqdSofcXrn9cN1VEMWA6sjr6L8L8YZ7mrDuPsUf9qrnGiQScJn7qQXouvrxvZNLPw1KFos8Rq3XT&Signature=u%2FIJShXw%2BhhLpOFniIyKC14zpmU%3D'
-        //img_url: 'https://img2.baidu.com/it/u=558600243,2109149929&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1067'
-        //img_url: 'https://miaobi-lite.cdn.bcebos.com/miaobi/5mao/b%275Zu%2B54mH5Yqo5ryr5ZSv576OXzE3MjkwNTA4NTkuMjI1ODczMg%3D%3D%27/0.png'
+        img_url: imageUrlForQwen  // 使用重新生成的签名URL(私有bucket)或原URL(公开bucket)
       },
       parameters: {
         resolution: resolution,  // v1.1: 基于quality_preset映射
@@ -301,22 +305,38 @@ function startPolling(workspaceId, taskId) {
   setTimeout(poll, interval);
 }
 
-// 处理生成完成
+// 处理生成完成 - 将视频下载后上传到 OSS
 async function handleCompleted(workspaceId, videoUrl) {
   logger.info(`视频生成完成: workspaceId=${workspaceId}, videoUrl=${videoUrl}`);
 
   try {
-    // 下载视频到本地
-    const { videoPath, localVideoUrl } = await downloadVideo(videoUrl, workspaceId);
+    // 下载视频 Buffer
+    logger.info(`开始下载视频到内存: ${videoUrl}`);
+    const response = await axios({
+      method: 'GET',
+      url: videoUrl,
+      responseType: 'arraybuffer',
+      timeout: 120000  // 2分钟超时
+    });
 
-    logger.info(`视频已保存到本地: ${videoPath}`);
+    const videoBuffer = Buffer.from(response.data);
+    logger.info(`视频下载完成: size=${videoBuffer.length} bytes`);
 
-    // 更新数据库,保存本地路径和URL
+    // 生成唯一文件名
+    const timestamp = Date.now();
+    const filename = `${workspaceId}_${timestamp}.mp4`;
+
+    // 上传到 OSS
+    const ossVideoUrl = await uploadVideo(videoBuffer, filename);
+
+    logger.info(`视频上传到 OSS 成功: filename=${filename}, url=${ossVideoUrl}`);
+
+    // 更新数据库, 保存 OSS URL
     await Workspace.findByIdAndUpdate(workspaceId, {
       'video.status': 'completed',
-      'video.url': localVideoUrl,  // 本地访问URL
-      'video.remote_url': videoUrl,  // 保存原始远程URL以备用
-      'video.path': videoPath,  // 本地文件路径
+      'video.url': ossVideoUrl,          // OSS 公开 URL
+      'video.remote_url': videoUrl,      // 保存原始 Qwen CDN URL 以备用
+      'video.path': filename,            // 仅存储文件名
       'video.error': null,
       updated_at: new Date()
     });
@@ -325,16 +345,16 @@ async function handleCompleted(workspaceId, videoUrl) {
       type: 'video.status_update',
       workspace_id: workspaceId,
       status: 'completed',
-      url: localVideoUrl  // 前端使用本地URL
+      url: ossVideoUrl  // 前端使用 OSS URL
     });
-  } catch (downloadError) {
-    logger.error(`视频下载失败: ${downloadError.message}`);
+  } catch (downloadOrUploadError) {
+    logger.error(`视频下载或上传到 OSS 失败: ${downloadOrUploadError.message}`);
 
-    // 下载失败时仍然保存远程URL,但标记为警告状态
+    // 下载/上传失败时仍然保存远程 URL 作为备用
     await Workspace.findByIdAndUpdate(workspaceId, {
       'video.status': 'completed',
-      'video.url': videoUrl,  // 使用远程URL作为备用
-      'video.error': `视频生成成功但本地保存失败: ${downloadError.message}`,
+      'video.url': videoUrl,  // 使用远程 URL 作为备用
+      'video.error': `视频生成成功但上传到 OSS 失败: ${downloadOrUploadError.message}`,
       updated_at: new Date()
     });
 
@@ -343,44 +363,9 @@ async function handleCompleted(workspaceId, videoUrl) {
       workspace_id: workspaceId,
       status: 'completed',
       url: videoUrl,
-      warning: '视频已生成但未能保存到本地,使用的是临时链接'
+      warning: '视频已生成但未能上传到 OSS, 使用的是临时链接'
     });
   }
-}
-
-// 下载视频到本地
-async function downloadVideo(videoUrl, workspaceId) {
-  // 创建videos目录(如果不存在)
-  const videosDir = path.join(config.upload.dir || './uploads', 'videos');
-  if (!fs.existsSync(videosDir)) {
-    fs.mkdirSync(videosDir, { recursive: true });
-  }
-
-  // 生成唯一文件名: workspace_id_timestamp.mp4
-  const timestamp = Date.now();
-  const filename = `${workspaceId}_${timestamp}.mp4`;
-  const videoPath = path.join(videosDir, filename);
-
-  logger.info(`开始下载视频: ${videoUrl} -> ${videoPath}`);
-
-  // 下载视频文件
-  const response = await axios({
-    method: 'GET',
-    url: videoUrl,
-    responseType: 'stream',
-    timeout: 120000  // 2分钟超时
-  });
-
-  // 使用stream pipeline保存文件
-  await pipeline(
-    response.data,
-    fs.createWriteStream(videoPath)
-  );
-
-  // 生成本地访问URL
-  const localVideoUrl = `/uploads/videos/${filename}`;
-
-  return { videoPath, localVideoUrl };
 }
 
 // 处理生成失败

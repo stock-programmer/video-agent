@@ -18,41 +18,42 @@ import { AgentExecutionError, ValidationError } from '../../utils/error-types.js
 /**
  * Intent Analysis Prompt Template
  */
-const INTENT_ANALYSIS_PROMPT = `You are an Intent Analysis Specialist for video generation.
+const INTENT_ANALYSIS_PROMPT = `你是视频生成的意图分析专家。
 
-Task: Based on user's input parameters, infer their TRUE INTENT.
+任务：根据用户输入的参数，推断他们的真实意图。
 
-Input Parameters:
+输入参数：
 {INPUT_PARAMS}
 
-Analysis Steps:
-1. **Visual Analysis**: What does the image show? (scene, subjects, composition, mood)
-2. **Parameter Interpretation**: What do the chosen parameters suggest?
-3. **Motion Intent**: What kind of movement does the user expect? (speed, style, energy)
-4. **Mood Inference**: What emotional tone is desired? (calm, energetic, dramatic, etc.)
-5. **Contradiction Check**: Are there conflicts between parameters and image content?
+分析步骤：
+1. **视觉分析**：图片展示了什么？（场景、主体、构图、情绪）
+2. **参数解读**：用户选择的参数暗示了什么？
+3. **运动意图**：用户期望什么样的运动？（速度、风格、能量）
+4. **情绪推断**：期望的情感基调是什么？（平静、活力、戏剧性等）
+5. **矛盾检查**：参数与图片内容之间是否存在冲突？
 
-Output JSON (wrap in <INTENT_REPORT>...</INTENT_REPORT>):
+输出 JSON（用 <INTENT_REPORT>...</INTENT_REPORT> 包裹）：
 {
   "user_intent": {
-    "scene_description": "A person standing in a park with trees and natural lighting",
-    "desired_mood": "Calm, peaceful, leisurely",
-    "key_elements": ["person", "outdoor environment", "natural light", "trees"],
-    "motion_expectation": "Slow, gentle walking motion without sudden movements",
-    "energy_level": "low-to-medium (relaxed pace)"
+    "scene_description": "一个人站在公园里，周围有树木和自然光线",
+    "desired_mood": "平静、祥和、悠闲",
+    "key_elements": ["人物", "户外环境", "自然光", "树木"],
+    "motion_expectation": "缓慢、轻柔的行走动作，没有突然的移动",
+    "energy_level": "低到中等（放松的节奏）"
   },
   "parameter_analysis": {
-    "aligned": ["natural lighting matches outdoor scene", "medium shot appropriate for single person"],
-    "potential_issues": ["motion_intensity=3 might be too fast for 'slowly' in prompt"]
+    "aligned": ["自然光线与户外场景匹配", "中景适合单人拍摄"],
+    "potential_issues": ["motion_intensity=3 对于提示词中的'缓慢'来说可能太快了"]
   },
   "confidence": 0.85
 }
 
-Important:
-- Do NOT analyze the generated video (that's video-analysis agent's job)
-- Focus on understanding what user WANTS, not what they GOT
-- Be specific and concrete in descriptions
-- Confidence should reflect certainty of your intent interpretation (0-1)
+重要提示：
+- 不要分析已生成的视频（那是视频分析agent的工作）
+- 专注于理解用户想要什么，而不是他们得到了什么
+- 描述要具体和明确
+- confidence 应该反映你对意图解读的确定程度（0-1）
+- 所有输出内容必须使用中文
 `;
 
 /**
@@ -64,15 +65,15 @@ function buildIntentAnalysisInput(workspace) {
   const { form_data, image_url } = workspace;
 
   const params = `
-Image: ${image_url}
-Camera Movement: ${form_data.camera_movement || 'N/A'}
-Shot Type: ${form_data.shot_type || 'N/A'}
-Lighting: ${form_data.lighting || 'N/A'}
-Motion Prompt: "${form_data.motion_prompt || 'N/A'}"
-Duration: ${form_data.duration || 5}s
-Aspect Ratio: ${form_data.aspect_ratio || '16:9'}
-Motion Intensity: ${form_data.motion_intensity || 3}
-Quality: ${form_data.quality_preset || 'standard'}
+图片: ${image_url}
+运镜方式: ${form_data.camera_movement || '未指定'}
+景别: ${form_data.shot_type || '未指定'}
+光线: ${form_data.lighting || '未指定'}
+运动描述: "${form_data.motion_prompt || '未指定'}"
+视频时长: ${form_data.duration || 5}秒
+宽高比: ${form_data.aspect_ratio || '16:9'}
+运动强度: ${form_data.motion_intensity || 3}
+视频质量: ${form_data.quality_preset || 'standard'}
 `;
 
   return INTENT_ANALYSIS_PROMPT.replace('{INPUT_PARAMS}', params.trim());

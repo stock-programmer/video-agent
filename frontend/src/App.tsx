@@ -24,10 +24,13 @@ function AppContent() {
               <Video className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-50 tracking-tight">
-                Video Maker
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex flex-wrap items-baseline gap-x-2">
+                <span className="bg-gradient-to-r from-rose-400 via-rose-500 to-pink-500 bg-clip-text text-transparent font-extrabold">
+                  三重梦
+                </span>
+                <span className="text-slate-50">AI视频工厂</span>
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1">AI 驱动的视频创作平台</p>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1">AI驱动的长短视频创作平台</p>
             </div>
           </div>
         </div>

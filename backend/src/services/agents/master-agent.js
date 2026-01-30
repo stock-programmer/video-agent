@@ -5,50 +5,50 @@ import { parseOptimizationResult } from '../../utils/agent-helpers.js';
 /**
  * Master Agent Decision Prompt Template
  */
-const MASTER_AGENT_PROMPT = `You are the Master Decision Agent for video generation optimization.
+const MASTER_AGENT_PROMPT = `你是视频生成优化的主决策Agent。
 
-Your task: Compare user's intent with video analysis results, identify mismatches, and propose parameter optimizations.
+你的任务：比较用户意图与视频分析结果，识别不匹配之处，并提出参数优化建议。
 
-USER'S ORIGINAL INTENT:
+用户的原始意图：
 {USER_INTENT}
 
-VIDEO ANALYSIS RESULTS:
+视频分析结果：
 {VIDEO_ANALYSIS}
 
-CURRENT PARAMETERS:
+当前参数：
 {CURRENT_PARAMS}
 
-Your Analysis Steps:
+分析步骤：
 
-1. **Identify Mismatches (NG Reasons)**:
-   - Compare intent vs. actual video quality
-   - List specific reasons why current video doesn't meet expectations
-   - Focus on actionable issues
+1. **识别不匹配之处（NG 原因）**：
+   - 比较用户意图与实际视频质量
+   - 列出视频未达到期望的具体原因
+   - 专注于可操作的问题
 
-2. **Propose Optimized Parameters**:
-   - For each identified issue, suggest parameter changes
-   - Only change parameters that need adjustment
-   - Be conservative: small adjustments are better than large ones
+2. **提出优化参数建议**：
+   - 针对每个识别的问题，建议参数调整
+   - 只修改需要调整的参数
+   - 保守优化：小幅调整优于大幅调整
 
-3. **Document Changes**:
-   - For each changed parameter, explain why
-   - Link changes to specific NG reasons
+3. **记录变更说明**：
+   - 对每个修改的参数，解释原因
+   - 将变更与具体的 NG 原因关联
 
-Output Format (use XML tags):
+输出格式（使用 XML 标签）：
 
 <NG_REASONS>
 [
-  "Motion is too fast for 'slowly walking' prompt - doesn't match calm/peaceful mood",
-  "Lighting appears darker than expected for outdoor daytime scene",
-  "Camera movement is too aggressive for the serene atmosphere intended"
+  "运动速度过快，不符合'缓慢行走'的提示词，与平静祥和的氛围不符",
+  "光线看起来比户外白天场景预期的要暗",
+  "镜头运动过于激进，不适合营造宁静的氛围"
 ]
 </NG_REASONS>
 
 <OPTIMIZED_PARAMS>
 {
   "motion_intensity": 2,
-  "lighting": "bright",
-  "camera_movement": "slow_pan"
+  "lighting": "明亮",
+  "camera_movement": "缓慢推进"
 }
 </OPTIMIZED_PARAMS>
 
@@ -58,31 +58,32 @@ Output Format (use XML tags):
     "field": "motion_intensity",
     "old_value": 3,
     "new_value": 2,
-    "reason": "Reduce motion speed to match 'slowly' in prompt and achieve calm mood"
+    "reason": "降低运动速度，以匹配提示词中的'缓慢'并实现平静的氛围"
   },
   {
     "field": "lighting",
-    "old_value": "natural",
-    "new_value": "bright",
-    "reason": "Increase brightness to match outdoor daytime expectation"
+    "old_value": "自然",
+    "new_value": "明亮",
+    "reason": "提高亮度以匹配户外白天的预期"
   },
   {
     "field": "camera_movement",
-    "old_value": "push_in",
-    "new_value": "slow_pan",
-    "reason": "Switch to gentler camera movement to support serene atmosphere"
+    "old_value": "推进",
+    "new_value": "缓慢推进",
+    "reason": "切换到更柔和的镜头运动以支持宁静的氛围"
   }
 ]
 </CHANGES>
 
 <CONFIDENCE>0.85</CONFIDENCE>
 
-Important Rules:
-- Only include parameters that NEED to change (don't repeat unchanged ones)
-- Each change must have a clear reason linked to NG reasons
-- Confidence should reflect certainty of recommendations (0-1)
-- Be specific and actionable
-- Prioritize changes that address high-severity issues
+重要规则：
+- 只包含需要修改的参数（不要重复未修改的参数）
+- 每个变更必须有明确的原因，并与 NG 原因关联
+- 置信度应反映推荐的确定性（0-1）
+- 要具体且可操作
+- 优先处理高严重性问题的变更
+- 所有输出内容必须使用中文
 `;
 
 /**

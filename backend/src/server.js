@@ -38,7 +38,7 @@ app.use(requestLogger);
 // Static File Serving
 // ============================================================
 
-// Serve uploaded images
+// Serve uploaded images (legacy fallback, 新上传的文件已存储到阿里云 OSS)
 app.use('/uploads', express.static('uploads'));
 
 // ============================================================
@@ -142,6 +142,25 @@ async function startServer() {
         logger.info('HTTP server closed');
         process.exit(0);
       });
+    });
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      // Ignore EPIPE errors (client disconnected)
+      if (error.code === 'EPIPE') {
+        logger.warn('Client disconnected (EPIPE), ignoring error');
+        return;
+      }
+
+      logger.error('Uncaught Exception:', error);
+      // Don't exit process for EPIPE, but exit for other uncaught exceptions
+      process.exit(1);
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      // Don't exit process, just log the error
     });
 
   } catch (error) {

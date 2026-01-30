@@ -225,13 +225,13 @@ export const ANGLE_PRESET_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: 'eye level', label: '平视', description: '与主体同高度视角' },
-  { value: 'low angle', label: '仰视', description: '从下向上拍摄' },
-  { value: 'high angle', label: '俯视', description: '从上向下拍摄' },
-  { value: 'birds eye', label: '鸟瞰', description: '正上方垂直俯视' },
-  { value: 'dutch angle', label: '倾斜', description: '倾斜构图，营造不稳定感' },
-  { value: 'overhead', label: '顶视', description: '从正上方俯瞰' },
-  { value: 'worms eye', label: '虫视', description: '极低角度仰视' }
+  { value: '平视', label: '平视', description: '与主体同高度视角' },
+  { value: '仰视', label: '仰视', description: '从下向上拍摄' },
+  { value: '俯视', label: '俯视', description: '从上向下拍摄' },
+  { value: '鸟瞰', label: '鸟瞰', description: '正上方垂直俯视' },
+  { value: '倾斜', label: '倾斜', description: '倾斜构图，营造不稳定感' },
+  { value: '顶视', label: '顶视', description: '从正上方俯瞰' },
+  { value: '虫视', label: '虫视', description: '极低角度仰视' }
 ];
 
 /**
@@ -242,11 +242,11 @@ export const FRAME_RATE_PRESET_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: '24', label: '24 fps', description: '电影标准帧率' },
-  { value: '25', label: '25 fps', description: 'PAL 视频标准' },
-  { value: '30', label: '30 fps', description: 'NTSC 视频标准，网络常用' },
-  { value: '60', label: '60 fps', description: '高帧率，流畅运动' },
-  { value: '120', label: '120 fps', description: '超高帧率，慢动作素材' }
+  { value: '24fps', label: '24 fps', description: '电影标准帧率' },
+  { value: '25fps', label: '25 fps', description: 'PAL 视频标准' },
+  { value: '30fps', label: '30 fps', description: 'NTSC 视频标准，网络常用' },
+  { value: '60fps', label: '60 fps', description: '高帧率，流畅运动' },
+  { value: '120fps', label: '120 fps', description: '超高帧率，慢动作素材' }
 ];
 
 /**
@@ -257,16 +257,16 @@ export const CAMERA_MOVEMENT_PRESET_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: 'push forward', label: '推进', description: '镜头向前推进' },
-  { value: 'pull back', label: '拉远', description: '镜头向后拉远' },
-  { value: 'pan left', label: '左移', description: '镜头水平左移' },
-  { value: 'pan right', label: '右移', description: '镜头水平右移' },
-  { value: 'tilt up', label: '上移', description: '镜头向上倾斜' },
-  { value: 'tilt down', label: '下移', description: '镜头向下倾斜' },
-  { value: 'zoom in', label: '拉近', description: '变焦拉近' },
-  { value: 'zoom out', label: '拉远', description: '变焦拉远' },
-  { value: 'orbit', label: '环绕', description: '围绕主体环绕' },
-  { value: 'static', label: '静止', description: '固定机位' }
+  { value: '推进', label: '推进', description: '镜头向前推进' },
+  { value: '拉远', label: '拉远', description: '镜头向后拉远' },
+  { value: '左移', label: '左移', description: '镜头水平左移' },
+  { value: '右移', label: '右移', description: '镜头水平右移' },
+  { value: '上移', label: '上移', description: '镜头向上倾斜' },
+  { value: '下移', label: '下移', description: '镜头向下倾斜' },
+  { value: '拉近', label: '拉近', description: '变焦拉近' },
+  { value: '拉远', label: '拉远', description: '变焦拉远' },
+  { value: '环绕', label: '环绕', description: '围绕主体环绕' },
+  { value: '静止', label: '静止', description: '固定机位' }
 ];
 
 /**
@@ -277,12 +277,12 @@ export const SHOT_TYPE_PRESET_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: 'close-up', label: '特写', description: '面部或物体细节' },
-  { value: 'medium shot', label: '中景', description: '腰部以上' },
-  { value: 'full shot', label: '全景', description: '全身镜头' },
-  { value: 'wide shot', label: '远景', description: '展示环境' },
-  { value: 'extreme close-up', label: '大特写', description: '局部细节' },
-  { value: 'medium close-up', label: '中特写', description: '胸部以上' }
+  { value: '特写', label: '特写', description: '面部或物体细节' },
+  { value: '中景', label: '中景', description: '腰部以上' },
+  { value: '全景', label: '全景', description: '全身镜头' },
+  { value: '远景', label: '远景', description: '展示环境' },
+  { value: '大特写', label: '大特写', description: '局部细节' },
+  { value: '中特写', label: '中特写', description: '胸部以上' }
 ];
 
 /**
@@ -293,14 +293,14 @@ export const LIGHTING_PRESET_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: 'natural', label: '自然光', description: '自然环境光线' },
-  { value: 'soft', label: '柔光', description: '柔和均匀光线' },
-  { value: 'hard', label: '硬光', description: '强烈对比光线' },
-  { value: 'golden hour', label: '黄金时段', description: '日出日落暖光' },
-  { value: 'blue hour', label: '蓝调时段', description: '黎明黄昏冷光' },
-  { value: 'backlight', label: '逆光', description: '背光效果' },
-  { value: 'side light', label: '侧光', description: '侧面照明' },
-  { value: 'dramatic', label: '戏剧性光线', description: '强烈情绪光线' }
+  { value: '自然光', label: '自然光', description: '自然环境光线' },
+  { value: '柔光', label: '柔光', description: '柔和均匀光线' },
+  { value: '硬光', label: '硬光', description: '强烈对比光线' },
+  { value: '黄金时段', label: '黄金时段', description: '日出日落暖光' },
+  { value: '蓝调时段', label: '蓝调时段', description: '黎明黄昏冷光' },
+  { value: '逆光', label: '逆光', description: '背光效果' },
+  { value: '侧光', label: '侧光', description: '侧面照明' },
+  { value: '戏剧性光线', label: '戏剧性光线', description: '强烈情绪光线' }
 ];
 
 // ===== 默认值常量 =====
