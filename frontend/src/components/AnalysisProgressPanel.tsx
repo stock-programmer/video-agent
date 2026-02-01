@@ -9,7 +9,7 @@
 
 import React, { useMemo } from 'react';
 import { useWorkspaceStore } from '../stores/workspaceStore';
-import type { AnalysisStep, ThoughtMessage } from '../types/workspace';
+import type { AnalysisStep } from '../types/workspace';
 import { AgentStepsSection } from './AgentStepsSection';
 import { ThoughtsSection } from './ThoughtsSection';
 

@@ -10,10 +10,9 @@ import type {
   OptimizationResult,
   ProgressMessage,
   AnalysisStep,
-  ThoughtMessage,
-  OptimizationHistoryEntry
+  ThoughtMessage
 } from '../types/workspace';
-import { DEFAULT_V1_1_FORM_DATA, applyV1_1Defaults } from '../types/workspace';
+import { applyV1_1Defaults } from '../types/workspace';
 
 // Simple debounce implementation
 function debounce<T extends (...args: any[]) => void>(

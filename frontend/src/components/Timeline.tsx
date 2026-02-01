@@ -36,7 +36,7 @@ export function Timeline() {
           <>
             {/* Horizontal Scrolling Timeline */}
             <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
-              {activeWorkspaces.map((workspace, index) => (
+              {activeWorkspaces.map((workspace, _index) => (
                 <div
                   key={workspace._id}
                   className={`flex-shrink-0 snap-center animate-in fade-in duration-500 ${

@@ -4,7 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/dom';
 import { AIOutputArea } from '../AIOutputArea';
 import type { OptimizationState } from '../../types/workspace';
 
@@ -18,7 +19,7 @@ vi.mock('../AgentProgress', () => ({
 }));
 
 vi.mock('../IntentReportModal', () => ({
-  IntentReportModal: ({ isOpen, workspaceId, intentReport }: any) => (
+  IntentReportModal: ({ isOpen, workspaceId, _intentReport }: any) => (
     <div data-testid="intent-modal">
       Modal isOpen: {String(isOpen)}, workspace: {workspaceId}
     </div>

@@ -8,8 +8,7 @@
  * - 自动重连机制
  */
 
-import { applyV1_1Defaults } from '../types/workspace';
-import type { WSV2Message, WSHumanConfirmMessage } from '../types/workspace';
+import type { WSHumanConfirmMessage } from '../types/workspace';
 
 type MessageHandler = (data: any) => void;
 
