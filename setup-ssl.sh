@@ -74,29 +74,105 @@ FRONTEND_DIR="$PROJECT_DIR/frontend"
 
 log_info "步骤 1: 验证域名解析..."
 
+# 检查必要的工具
+if ! command -v curl &> /dev/null; then
+    log_error "curl 未安装，请先安装: apt-get install curl"
+    exit 1
+fi
+
+if ! command -v dig &> /dev/null; then
+    log_error "dig 未安装，请先安装: apt-get install dnsutils"
+    exit 1
+fi
+
 # 获取服务器公网 IP
-SERVER_IP=$(curl -s https://api.ipify.org)
-log_info "服务器公网 IP: $SERVER_IP"
+log_info "正在获取服务器公网 IP..."
+
+# 尝试多个 IP 查询服务（带超时）
+get_public_ip() {
+    local ip=""
+
+    # 方法1: 阿里云元数据服务（最快，适用于阿里云 ECS）
+    ip=$(curl -s --connect-timeout 3 --max-time 5 http://100.100.100.200/latest/meta-data/public-ipv4 2>/dev/null)
+    if [ -n "$ip" ] && [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ip"
+        return 0
+    fi
+
+    # 方法2: ifconfig.me
+    ip=$(curl -s --connect-timeout 3 --max-time 5 ifconfig.me 2>/dev/null)
+    if [ -n "$ip" ] && [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ip"
+        return 0
+    fi
+
+    # 方法3: icanhazip.com
+    ip=$(curl -s --connect-timeout 3 --max-time 5 icanhazip.com 2>/dev/null)
+    if [ -n "$ip" ] && [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ip"
+        return 0
+    fi
+
+    # 方法4: ipinfo.io
+    ip=$(curl -s --connect-timeout 3 --max-time 5 ipinfo.io/ip 2>/dev/null)
+    if [ -n "$ip" ] && [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ip"
+        return 0
+    fi
+
+    return 1
+}
+
+SERVER_IP=$(get_public_ip)
+
+if [ -z "$SERVER_IP" ]; then
+    log_warning "无法自动获取服务器公网 IP"
+    log_info "请手动输入服务器公网 IP（或按 Enter 跳过验证）:"
+    read -p "服务器 IP: " MANUAL_IP
+
+    if [ -n "$MANUAL_IP" ]; then
+        SERVER_IP="$MANUAL_IP"
+        log_info "使用手动指定的 IP: $SERVER_IP"
+    else
+        log_warning "跳过 IP 验证，继续执行..."
+        SERVER_IP="skip"
+    fi
+else
+    log_success "服务器公网 IP: $SERVER_IP"
+fi
 
 # 检查域名解析
+log_info "正在检查域名解析..."
 DOMAIN_IP=$(dig +short $DOMAIN | tail -n1)
 
 if [ -z "$DOMAIN_IP" ]; then
     log_error "域名 $DOMAIN 无法解析"
-    log_info "请先配置 DNS A 记录指向: $SERVER_IP"
-    exit 1
-fi
-
-if [ "$DOMAIN_IP" = "$SERVER_IP" ]; then
-    log_success "域名解析正确: $DOMAIN -> $SERVER_IP"
-else
-    log_warning "域名解析不匹配!"
-    log_info "域名解析到: $DOMAIN_IP"
-    log_info "服务器 IP: $SERVER_IP"
-    read -p "是否继续？(y/N): " -n 1 -r
+    if [ "$SERVER_IP" != "skip" ]; then
+        log_info "请先配置 DNS A 记录指向: $SERVER_IP"
+    fi
+    read -p "域名未解析，是否继续？(y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
+    fi
+else
+    log_info "域名解析到: $DOMAIN_IP"
+
+    if [ "$SERVER_IP" != "skip" ]; then
+        if [ "$DOMAIN_IP" = "$SERVER_IP" ]; then
+            log_success "域名解析正确: $DOMAIN -> $SERVER_IP"
+        else
+            log_warning "域名解析不匹配!"
+            log_info "域名解析到: $DOMAIN_IP"
+            log_info "服务器 IP: $SERVER_IP"
+            read -p "是否继续？(y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                exit 1
+            fi
+        fi
+    else
+        log_success "域名已解析 (未验证 IP 匹配)"
     fi
 fi
 
