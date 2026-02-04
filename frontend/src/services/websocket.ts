@@ -326,9 +326,30 @@ class WebSocketClient {
   }
 }
 
+/**
+ * 智能构建 WebSocket URL
+ * - 开发环境：使用 VITE_WS_URL 或默认 ws://localhost:3001
+ * - 生产环境：根据当前页面 URL 动态构建
+ *   - https://example.com → wss://example.com:3001
+ *   - http://example.com → ws://example.com:3001
+ */
+function getWebSocketUrl(): string {
+  // 优先使用环境变量（开发环境）
+  if (import.meta.env?.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
+
+  // 生产环境：根据当前页面 URL 动态构建
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const hostname = window.location.hostname;
+    const port = '3001'; // WebSocket 服务器端口
+    return `${protocol}//${hostname}:${port}`;
+  }
+
+  // 兜底方案（不应该执行到这里）
+  return 'ws://localhost:3001';
+}
+
 // 导出单例
-export const wsClient = new WebSocketClient(
-  typeof window !== 'undefined' && import.meta.env?.VITE_WS_URL
-    ? import.meta.env.VITE_WS_URL
-    : 'ws://localhost:3001'
-);
+export const wsClient = new WebSocketClient(getWebSocketUrl());
