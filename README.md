@@ -4,14 +4,12 @@
 
 <h3>作者 · 许武</h3>
 
-🌈 让创意触手可及*
+🌈 让创意触手可及
 
 <br>
 
 [![使用 Claude Code 构建](https://img.shields.io/badge/%E4%BD%BF%E7%94%A8-Claude%20Code-%23blueviolet.svg)](https://claude.com/code)
 [![零手写代码](https://img.shields.io/badge/%E6%89%8B%E5%86%99%E4%BB%A3%E7%A0%81-0%25-ff69b4.svg)]()
-
-[English](README.en.md) | [简体中文](README.md)
 
 </div>
 
