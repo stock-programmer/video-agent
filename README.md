@@ -1,10 +1,19 @@
 <div align="center">
 
-# 🎬 三重梦AI视频工厂
+<!-- 主标题 - 渐变色体现创意动感 -->
+<h1 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 3em; margin-bottom: 0.3em;">
+  🎬 三重梦AI视频工厂
+</h1>
 
-<h3>作者 · 许武</h3>
+<!-- 作者信息 - 优雅灰色调 -->
+<h3 style="color: #64748b; font-weight: 300; letter-spacing: 0.1em; margin: 0.5em 0;">
+  作者 · <span style="color: #334155; font-weight: 500;">许武</span>
+</h3>
 
-<sub>让创意触手可及</sub>
+<!-- Slogan - 轻盈金色点缀 -->
+<p style="color: #94a3b8; font-size: 0.9em; font-style: italic; margin-top: 0.8em;">
+  ✨ 让创意触手可及
+</p>
 
 </div>
 
@@ -14,12 +23,13 @@
 
 ### 🎯 1，随便写就能生成想要的视频
 
-无需专业知识（导演/摄影/剪辑），AI会帮忙自动完成画面优化，节奏适配等等所有过程。
+无需专业知识（导演/摄影/剪辑），AI会帮忙自动完成画面优化，节奏适配等所有过程。
 
 ### ✨ 2，超级个体主导全链条
 
 个人实现从业务端（需求梳理，业务逻辑，导演/视频等领域认知），产品端（页面布局，交互设计，流程逻辑，产品理念），技术端（多agent系统，Claude code spec driven开发范式，前后端全栈开发）的全流程工作，完成从0到1的产品落地与发布。
 
+---
 ---
 
 ## 🚀 革命性的开发范式
