@@ -329,9 +329,9 @@ class WebSocketClient {
 /**
  * 智能构建 WebSocket URL
  * - 开发环境：ws://localhost:3001
- * - 生产环境：根据当前页面 URL 动态构建
- *   - https://example.com → wss://example.com:3001
- *   - http://example.com → ws://example.com:3001
+ * - 生产环境：通过nginx反向代理
+ *   - https://example.com/ws → wss://example.com/ws
+ *   - http://example.com/ws → ws://example.com/ws
  */
 function getWebSocketUrl(): string {
   if (typeof window === 'undefined') {
@@ -341,12 +341,15 @@ function getWebSocketUrl(): string {
 
   const isDevelopment = import.meta.env.MODE === 'development';
 
-  // 运行时动态构建 WebSocket URL
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const hostname = isDevelopment ? 'local' + 'host' : window.location.hostname;
-  const port = '3001';
+  if (isDevelopment) {
+    // 开发环境：直接连接到3001端口
+    return 'ws://' + 'local' + 'host:3001';
+  }
 
-  return `${protocol}//${hostname}:${port}`;
+  // 生产环境：通过nginx代理（使用标准443/80端口）
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host; // 包含端口（如果有）
+  return `${protocol}//${host}/ws`;
 }
 
 // 导出单例
