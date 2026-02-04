@@ -1,17 +1,40 @@
-# 三重梦AI视频工厂
+<div align="center">
 
-> 1，随便写就能生成想要的视频。
-     无需专业知识（导演/摄影/剪辑），AI会帮忙自动完成画面优化，节奏适配等等所有过程。
+# 🎬 三重梦AI视频工厂
 
->  2，超级个体主导全链条。
-     个人承接从业务端（需求梳理，业务逻辑，导演/视频等领域认知），产品端（页面布局，交互设计，流程逻辑，产品理念），
-     技术端（多agent系统，Claude code spec driven开发范式，前后端全栈开发）的全流程工作，完成从0到1的产品落地与发布。
-
-
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6+-green.svg)](https://www.mongodb.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![使用 Claude Code 构建](https://img.shields.io/badge/%E4%BD%BF%E7%94%A8-Claude%20Code-%23blueviolet.svg)](https://claude.com/code)
 [![零手写代码](https://img.shields.io/badge/%E6%89%8B%E5%86%99%E4%BB%A3%E7%A0%81-0%25-ff69b4.svg)]()
 
 [English](README.en.md) | [简体中文](README.md)
+
+</div>
+
+---
+
+## 💎 核心亮点
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎯 1，随便写就能生成想要的视频
+
+无需专业知识（导演/摄影/剪辑），AI会帮忙自动完成画面优化，节奏适配等等所有过程。
+
+</td>
+<td width="50%">
+
+### 🚀 2，超级个体主导全链条
+
+个人承接从业务端（需求梳理，业务逻辑，导演/视频等领域认知），产品端（页面布局，交互设计，流程逻辑，产品理念），技术端（多agent系统，Claude code spec driven开发范式，前后端全栈开发）的全流程工作，完成从0到1的产品落地与发布。
+
+</td>
+</tr>
+</table>
 
 ---
 
