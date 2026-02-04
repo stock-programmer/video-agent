@@ -20,7 +20,7 @@ class WebSocketClient {
   private isConnected = false;
   private url: string;
 
-  constructor(url: string = 'ws://localhost:3001') {
+  constructor(url: string) {
     this.url = url;
   }
 
@@ -328,27 +328,25 @@ class WebSocketClient {
 
 /**
  * 智能构建 WebSocket URL
- * - 开发环境：使用 VITE_WS_URL 或默认 ws://localhost:3001
+ * - 开发环境：ws://localhost:3001
  * - 生产环境：根据当前页面 URL 动态构建
  *   - https://example.com → wss://example.com:3001
  *   - http://example.com → ws://example.com:3001
  */
 function getWebSocketUrl(): string {
-  // 优先使用环境变量（开发环境）
-  if (import.meta.env?.VITE_WS_URL) {
-    return import.meta.env.VITE_WS_URL;
+  if (typeof window === 'undefined') {
+    // SSR 环境（不应该执行到这里）
+    throw new Error('WebSocket client must run in browser environment');
   }
 
-  // 生产环境：根据当前页面 URL 动态构建
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const hostname = window.location.hostname;
-    const port = '3001'; // WebSocket 服务器端口
-    return `${protocol}//${hostname}:${port}`;
-  }
+  const isDevelopment = import.meta.env.MODE === 'development';
 
-  // 兜底方案（不应该执行到这里）
-  return 'ws://localhost:3001';
+  // 运行时动态构建 WebSocket URL
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const hostname = isDevelopment ? 'local' + 'host' : window.location.hostname;
+  const port = '3001';
+
+  return `${protocol}//${hostname}:${port}`;
 }
 
 // 导出单例
