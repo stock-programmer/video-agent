@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=35&duration=3000&pause=1000&color=667EEA&center=true&vCenter=true&width=600&lines=🎬+三重梦AI视频工厂" alt="三重梦AI视频工厂" />
+<img src="./logo.png" alt="三重梦AI视频工厂" width="600" />
 
-<h3><sub>作者 ·</sub> <b>许武</b></h3>
+<h3>作者 · 许武</h3>
 
 *✨ 让创意触手可及*
 
