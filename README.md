@@ -1,19 +1,17 @@
 <div align="center">
 
-<!-- 主标题 - 渐变色体现创意动感 -->
-<h1 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 3em; margin-bottom: 0.3em;">
-  🎬 三重梦AI视频工厂
-</h1>
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=35&duration=3000&pause=1000&color=667EEA&center=true&vCenter=true&width=600&lines=🎬+三重梦AI视频工厂" alt="三重梦AI视频工厂" />
 
-<!-- 作者信息 - 优雅灰色调 -->
-<h3 style="color: #64748b; font-weight: 300; letter-spacing: 0.1em; margin: 0.5em 0;">
-  作者 · <span style="color: #334155; font-weight: 500;">许武</span>
-</h3>
+<h3><sub>作者 ·</sub> <b>许武</b></h3>
 
-<!-- Slogan - 轻盈金色点缀 -->
-<p style="color: #94a3b8; font-size: 0.9em; font-style: italic; margin-top: 0.8em;">
-  ✨ 让创意触手可及
-</p>
+*✨ 让创意触手可及*
+
+<br>
+
+[![使用 Claude Code 构建](https://img.shields.io/badge/%E4%BD%BF%E7%94%A8-Claude%20Code-%23blueviolet.svg)](https://claude.com/code)
+[![零手写代码](https://img.shields.io/badge/%E6%89%8B%E5%86%99%E4%BB%A3%E7%A0%81-0%25-ff69b4.svg)]()
+
+[English](README.en.md) | [简体中文](README.md)
 
 </div>
 
