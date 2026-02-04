@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 三重梦<sup>AI视频工厂</sup>
+# 🎬 三重梦AI视频工厂
 
 <h3>作者 · 许武</h3>
 
