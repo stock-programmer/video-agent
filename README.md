@@ -11,6 +11,10 @@
 [![使用 Claude Code 构建](https://img.shields.io/badge/%E4%BD%BF%E7%94%A8-Claude%20Code-%23blueviolet.svg)](https://claude.com/code)
 [![零手写代码](https://img.shields.io/badge/%E6%89%8B%E5%86%99%E4%BB%A3%E7%A0%81-0%25-ff69b4.svg)]()
 
+<br>
+
+<img src="./shouye.jpeg" alt="三重梦AI视频工厂首页" width="800" />
+
 </div>
 
 ---
